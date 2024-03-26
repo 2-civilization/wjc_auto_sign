@@ -106,7 +106,31 @@ class WJC:
         else:
             return {'code': 0, 'msg': '获取签到任务失败', 'info': {'code': res.status_code, 'content': res.text}}
 
+    def sign(self,coordinate:str,dm:str,sjdm:str):
+        api = 'https://ehall.uwh.edu.cn/student/content/student/sign/stu/sign'
+        params_load = {
+            '_t_s_':self.__timeGen()
+        }
         
+        data_form = {
+            "pathFile": "",
+            "dm": dm,
+            "sjdm": sjdm,
+            "zb": coordinate,
+            "wz": "安徽师范大学皖江学院（江北校区）附近",
+            "ly": "lbs",
+            "qdwzZt": "0",
+            "fwwDistance": "0",    #距离签到位置距离
+            "operationType": "Update"
+        }
+
+        res = self.s.post(api,params=params_load, data=data_form,headers=self.headers)
+        if res.status_code == 200:
+            return {'code': 1, 'msg': '成功签到', 'info': res.json()}
+        else:
+            return {'code': 0, 'msg': '签到失败', 'info': {'code': res.status_code, 'content': res.text}}
+
+
 
 
 
