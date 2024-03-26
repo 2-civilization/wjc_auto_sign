@@ -95,16 +95,56 @@ Response:
 
 ```
 
+成功签到示例：
+```json
+
+{
+    "code": 1,
+    "msg": "成功获取签到任务",
+    "info": {
+        "sEcho": 1,
+        "iDisplayStart": 0,
+        "iDisplayLength": 12,
+        "iSortColList": [2],
+        "sSortDirList": ["desc"],
+        "iTotalRecords": 1,
+        "iTotalDisplayRecords": 1,
+        "aaData": [
+            {
+                "UPDATE_COUNT": 2,
+                "JSSJ": "2024-03-26 23:00:00",
+                "QDFS": "1",
+                "SJDM": "17112924123429681075",
+                "QDCS": 1,
+                "VALID": "1",
+                "DM": "17089192567824456997",
+                "JLDM": "17114572277777336296",
+                "QDWZ_DZ": "中国安徽 省芜湖市鸠江区二坝镇通江大道辅路",
+                "QDLB": "晚间签到",
+                "QDSJ": "2024-03-26 20:47:07",
+                "UPDATE_IND": "1",
+                "FBR": "张铮",
+                "SUBJECT": "江北 校区晚间签到",
+                "KSSJ": "2024-03-26 20:30:00",
+                "ISFZR": "0"
+            }
+        ]
+    }
+}
+
+```
+
+
 其中:
+- `JSSJ`：签到结束时间
+- `KSSJ`: 签到开始时间
 - `SJDM`和`DM`: 后续签到需要用到的信息。
-- `QDSJ`: `null` 未签到
-- `VALID`: `"0"`未开始
-
-
-
-
-
-
+- `QDSJ`: 签到时间 时间格式：`YYYY-MM-DD H:M:S`
+  - `null` 未签到
+- `VALID`: 
+  - `"0"`：未开始
+  - `"1"`：已开始
+- 
 
 
 
