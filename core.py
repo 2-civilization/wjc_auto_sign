@@ -2,7 +2,10 @@ import requests
 from pswd_encrypt import encryptAES
 from lxml import etree
 from time import time as getTime
+from requests.packages import urllib3
+from setting import logger
 
+urllib3.disable_warnings()
 
 class WJC:
     def __init__(self, account, pswd):
@@ -46,18 +49,28 @@ class WJC:
                     'salt': html.xpath('//input[@id="pwdEncryptSalt"][1]/@value')[0],
                     'execution': html.xpath('//input[@id="execution"][1]/@value')[0]
                 })
-                return {'code': 1, 'msg': '成功获取加密参数出现错误', 'info': {}}
+                msg = {'code': 1, 'msg': '成功获取加密参数出现错误', 'info': {}}
+                logger.info(f"[{msg['code']}] {msg['msg']}")
+                return msg
             except Exception as e:
-                return {'code': 0, 'msg': '尝试获取加密参数出现错误，错误信息会被保存于info中', 'info': {'msg': e}}
+                msg = {'code': -1, 'msg': '尝试获取加密参数出现错误，错误信息会被保存于info中', 'info': {'msg': e}}
+                logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']['msg']}")
+                return msg
         else:
-            return {'code': 0, 'msg': '请求登录界面失败，具体信息将会被保存在info中',
+            msg = {'code': 0, 'msg': '请求登录界面失败，具体信息将会被保存在info中',
                     'info': {'code': res.status_code, 'content': res.text}}
+            logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']['code']}\n{msg['info']['content']}")
+            return msg
 
     def login(self):
         if not self.account or not self.pswd:
-            return {'code': 0, 'msg': '账号或密码不能为空', 'info': {}}
+            msg = {'code': 0, 'msg': '账号或密码不能为空', 'info': {}}
+            logger.error(f"[{msg['code']}] {msg['msg']}")
+            return msg
         if not self.__login_form.get('salt') or not self.__login_form.get('execution'):
-            return {'code': 0, 'msg': '无加密参数', 'info': {}}
+            msg = {'code': 0, 'msg': '无加密参数', 'info': {}}
+            logger.error(f"[{msg['code']}] {msg['msg']}")
+            return msg
 
         data_form = {
             'username': self.account,
@@ -83,8 +96,9 @@ class WJC:
         cookie = ''
         for k,v in self.s.cookies.get_dict().items():
             cookie += k+'='+v+';'
-        
-        print(cookie)
+        msg = {'code':1,'msg':f'({self.account})登录成功','info':{}}
+        logger.info(f"[{msg['code']}] {msg['msg']}")
+        return msg
     
     def getSignTask(self):
         api = 'https://ehall.uwh.edu.cn/student/content/tabledata/student/sign/stu/sign'
@@ -98,13 +112,16 @@ class WJC:
             "sSortDir_0": "desc",
             "_t_s_": self.__timeGen()
         }
-        print(params_load['_t_s_'])
 
         res = self.s.get(api, params=params_load)
         if res.status_code == 200:
-            return {'code': 1, 'msg': '成功获取签到任务', 'info': res.json()}
+            msg = {'code': 1, 'msg': '成功获取签到任务', 'info': res.json()}
+            logger.info(f"[{msg['code']}] {msg['msg']}")
+            return msg
         else:
-            return {'code': 0, 'msg': '获取签到任务失败', 'info': {'code': res.status_code, 'content': res.text}}
+            msg = {'code': 0, 'msg': '获取签到任务失败', 'info': {'code': res.status_code, 'content': res.text}}
+            logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']}")
+            return msg
 
     def sign(self,coordinate:str,dm:str,sjdm:str):
         api = 'https://ehall.uwh.edu.cn/student/content/student/sign/stu/sign'
@@ -126,11 +143,13 @@ class WJC:
 
         res = self.s.post(api,params=params_load, data=data_form,headers=self.headers)
         if res.status_code == 200:
-            return {'code': 1, 'msg': '成功签到', 'info': res.json()}
+            msg = {'code': 1, 'msg': '成功签到', 'info': res.json()}
+            logger.info(f"[{msg['code']}] {msg['msg']}")
+            return msg
         else:
-            return {'code': 0, 'msg': '签到失败', 'info': {'code': res.status_code, 'content': res.text}}
-
-
+            msg = {'code': 0, 'msg': '签到失败', 'info': {'code': res.status_code, 'content': res.text}}
+            logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']}")
+            return msg
 
 
 

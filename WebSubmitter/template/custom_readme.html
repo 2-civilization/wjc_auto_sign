@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用说明</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 leading-relaxed">
+
+  <div class="container mx-auto max-w-screen-lg p-8">
+
+    <h1 class="text-3xl font-bold mb-6">使用说明</h1>
+
+    <h2 class="text-2xl font-semibold mb-4" id="注册与更新">注册&amp;更新</h2>
+    
+    <p>自动签到程序将会根据您提供的校芜优登录账号、密码及设置的坐标，在签到时间内为您自动签到。请确保正确填写以下信息：</p>
+    
+    <ul class="list-disc pl-4">
+      <li>校芜优登录账号</li>
+      <li>校芜优登录密码</li>
+      <li class="text-red-600 underline">你的常用邮箱（非常重要）</li>
+      <li>希望签到时提交的坐标</li>
+    </ul>
+    
+    <p class="mt-4">您可以多次提交信息以便进行修改，比如更改签到坐标。</p>
+    
+    <p class="mb-6">请务必填写一个能正常接收邮件的常用邮箱地址，这样每晚签到的状态都会及时通知给您，避免因密码错误或其他原因导致签到失败。</p>
+
+    <h2 class="text-2xl font-semibold mt-8" id="自定义经纬度说明">自定义经纬度说明</h2>
+    
+    <p>签到需要高精度经纬度，精确到小数点后6位，以确保签到成功。例如，芜湖学院（14号楼）会堂的坐标是：</p>
+    
+    <blockquote class="bg-gray-200 rounded p-4 mb-4 border-l-4 border-gray-300">
+      <p><code>118.265839,31.360021</code></p>
+    </blockquote>
+    
+    <p>您可以使用如下工具获取所需的签到位置：</p>
+    
+    <ul class="list-none mb-6">
+      <li>
+        <a href="https://lbs.amap.com/tools/picker" class="underline hover:text-blue-600">使用高德地图获取</a>
+      </li>
+    </ul>
+
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册签到任务</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+    <style>
+    </style>
+</head>
+<body class="bg-gray-200">
+    <div class="max-w-md mx-auto my-16 p-8 rounded-lg bg-white shadow-md">
+        <h2 class="text-center text-2xl font-medium mb-4">注册签到</h2>
+        
+        <form id="registration-form" class="space-y-6">
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700">账号：</label>
+                <input type="text" id="username" class="mt-1 py-2 px-3 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required placeholder="输入你的校芜优账号">
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">密码：</label>
+                <input type="password" id="password" class="mt-1 py-2 px-3 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required placeholder="输入你的校芜优密码">
+            </div>
+
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">邮箱：</label>
+                <input type="email" id="email" class="mt-1 py-2 px-3 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required placeholder="用于通知签到状态">
+            </div>
+
+            <div>
+                <label for="location-selector" class="block text-sm font-medium text-gray-700">选择地址：</label>
+                <select id="location-selector" class="mt-1 py-2 px-3 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+                    <!-- 添加预设的地址选项 -->
+                    <option value="">请选择一个位置</option>
+                </select>
+            </div>
+
+            <!-- 地址相关部分 -->
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="use-custom-address" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="use-custom-address" class="font-medium text-gray-700">使用自定义经纬度</label>
+                </div>
+            </div>
+
+            <div class="flex items-start" id="custom-coordinates-container" style="display:none;">
+                <!-- 经度提示 -->
+                <div class="text-gray-500 mb-1">
+                    输入你需要自定义的经纬度，如无需求请直接从上面可选项选择。<a href="#" id="coordinates-guide-link" class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600">自定义经纬度说明</a>
+                </div>
+                
+                <div>
+                    <label for="latitude" class="block text-sm font-medium text-gray-700">经度：</label>
+                    <input type="text" id="latitude" class="mt-1 py-2 px-3 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="例如：118.265303">
+                </div>
+                
+                <div>
+                    <label for="longitude" class="block text-sm font-medium text-gray-700">纬度：</label>
+                    <input type="text" id="longitude" class="mt-1 py-2 px-3 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="例如：31.359218">
+                </div>
+            
+                <div id="location-validation-message" class="text-sm text-red-600"></div>
+            </div>
+            
+            <div class="flex items-center justify-center mt-6">
+                <a href="/customLocalHelp" class="text-indigo-600 underline hover:text-indigo-800 visited:text-purple-600" target="_blank">请先点我查看说明</a>
+            </div>
+
+            <button type="button" id="submit-button" class="w-full py-3 mt-6 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-500 focus:outline-none focus:bg-indigo-700 transition duration-150 ease-in-out">注册&更新</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $.getJSON("/file/local", function (data) {
+                let options = '';
+                $.each(data, function (key, item) {
+                    options += '<option value="' + item.longitude+','+item.latitude + '">' + item.name+'-'+item.longitude+','+item.latitude + '</option>';
+                });
+
+                $('#location-selector').append(options);
+                // $('#location-selector').on('change', function () {
+                //     const selectedLocation = data[$(this).val()];
+                //     if (selectedLocation) {
+                //         $('#selected-longitude').val(selectedLocation.longitude);
+                //         $('#selected-latitude').val(selectedLocation.latitude);
+                //     } else {
+                //         $('#selected-longitude').val('');
+                //         $('#selected-latitude').val('');
+                //     }
+                // });
+            });
+
+            $('#use-custom-address').on('change', function () {
+                const customCoordinatesContainer = $('#custom-coordinates-container');
+                customCoordinatesContainer.css('display', this.checked ? 'block' : 'none');
+
+                // 当选择自定义经纬度时，禁用地址选择框
+                $('#location-selector').prop('disabled', this.checked);
+                $('#location-selector').prop('required', !this.checked);
+
+                $('#latitude').prop('required', this.checked);
+                $('#longitude').prop('required', this.checked);
+            
+
+                // 如果取消自定义经纬度，则清空验证信息
+                if (!this.checked) {
+                    $('#location-validation-message').text('');
+                }
+            });
+
+
+            $('#submit-button').click(function () {
+                let $form = $("#registration-form")
+                if($form[0].checkValidity()){
+                    let login_form = {
+                        username: $('#username').val(),
+                        password: $('#password').val(),
+                        email: $('#email').val(),
+                        coordinates: $("#location-selector").val(), 
+                    }
+
+                    if ($('#use-custom-address').is(':checked')) {
+                        // 使用自定义经纬度
+                        const latitude = $('#latitude').val();
+                        const longitude = $('#longitude').val();
+
+                        // 假设调用地图API进行验证
+                        // 以下仅为模拟请求，实际请替换为真实的地图API请求
+                        login_form.coordinates = `${latitude},${longitude}`;
+                    }
+
+                    $.post("/submit", login_form, function (data) {
+                        if (data.code == 0) {
+                            alert("注册&更新信息成功");
+                            window.location.href = "/reg_success_page";
+                        } else {
+                            alert(data.msg);
+                        }
+                    })
+                }else{
+                    $form[0].reportValidity();
+                }
+
+                
+            });
+        });  
+    </script>
+</body>
+</html>
