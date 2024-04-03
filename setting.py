@@ -40,7 +40,6 @@ DB_INIT_SQL = '''
         pswd TEXT NOT NULL,
         email TEXT NOT NULL,
         coordinate TEXT NOT NULL,
-        salt TEXT NOT NULL,
         updateTime TEXT NOT NULL,
         signTime TEXT,
         success INTEGER DEFAULT 0,
