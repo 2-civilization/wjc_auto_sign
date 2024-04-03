@@ -8,3 +8,5 @@ PyYAML==6.0.1
 requests==2.31.0
 shellescape==3.8.1
 urllib3==2.2.1
+yagmail==0.15.293
+aiosqlite==0.20.0
