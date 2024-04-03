@@ -16,7 +16,17 @@ class AutoSign:
         wjc = WJC(account, pswd)
         wjc.login()
         info = wjc.getSignTask()
-        info = wjc.sign(coordinate,info['info']['aaData'][0]['DM'],info['info']['aaData'][0]['SJDM'])
+        try:
+            info = wjc.sign(coordinate,info['info']['aaData'][0]['DM'],info['info']['aaData'][0]['SJDM'])
+        except KeyError:
+            logger.error(f"{account} 签到失败")
+            self.q_fail_user.put({
+                'account':account,
+                'pswd':pswd,
+                'coordinate':coordinate,
+                'email':email,
+                'info':str(info)
+            })
         if info['code'] == 'ok':
             logger.info(f"{account} 签到成功")
             mail_content = mail_control.user_mail_gen(f"签到成功",f"{account} 签到成功",str(info['info']))
@@ -58,14 +68,14 @@ class AutoSign:
             user = self.q_fail_user.get()
             self.q_fail_user.task_done()
             await self.db.user_sign(user['account'])
+            times_try +=1
         
         while not self.q_fail_user.empty():
             user = self.q_fail_user.get()
-            mail_content = mail_control.user_mail_gen('签到失败','签到失败',user['info'])
+            mail_content = mail_control.user_mail_gen('签到失败','请检查账号密码等信息是否正确',user['info'])
             mail_control.user_mail('签到失败',mail_content,user['email'])
             self.q_fail_user.task_done()
     
-
     async def time_check(self):
         logger.info('时间检查开始')
         while True:
