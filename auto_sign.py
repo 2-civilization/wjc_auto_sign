@@ -84,6 +84,7 @@ class AutoSign:
                     self.__fail_user_sign()
                     break
                 else:
+                    logger.info(f'未找到需要签到用户，等待{TIME_CHCECK_WAIT}秒后重新开始签到')
                     sleep(TIME_CHCECK_WAIT)
                 users_info = self.db.get_users_info()
                 info = []
@@ -96,6 +97,7 @@ class AutoSign:
                     })
                 mail_content = mail_control.admin_mail_gen(info)
                 mail_control.user_mail('签到状态',mail_content)
+            logger.info(f'签到结束，等待{TIME_SLEEP_WAIT}')
             sleep(TIME_SLEEP_WAIT)
 
 if __name__ == '__main__':

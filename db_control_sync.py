@@ -22,10 +22,14 @@ class DBControl:
         db = sqlite3.connect(self.db_path)
         cursor = db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
         if cursor.fetchone():
+            db.close()
+            logger.info(f"添加或更新用户{account} 添加成功")
             return self.update_user(account, pswd, email, coordinate)
         else:
             db.execute(f"INSERT INTO users (id,pswd,email,coordinate,updateTime,signTime,success,total) VALUES (?,?,?,?,?,?,?,?)", (account, pswd, email, coordinate, getTime(), 0, 0, 0))
             db.commit()
+            db.close()
+            logger.info(f"添加或更新用户{account} 添加成功")
     
     def check_user(self, account):
         db = sqlite3.connect(self.db_path)
@@ -34,17 +38,21 @@ class DBControl:
             user_info =  cursor.fetchone()
             lastSignTime = datetime.fromtimestamp(int(user_info[5]) / 1000.0).date()
             now_time = datetime.now(datetime.timezone.utc).date()
+            db.close()
             if lastSignTime == now_time:
-                return {'code':0,'msg':'该用户已经签到','info':user_info}
+                return {'code':'ok_signed','msg':'该用户已经签到','info':user_info}
             else:
-                return {'code':1,'msg':'该用户未签到','info':user_info}
+                return {'code':'ok','msg':'该用户未签到','info':user_info}
         else:
-            return {'code':-1,'msg':'用户不存在'}
+            db.close()
+            return {'code':'fail','msg':'用户不存在'}
+    
     
     def update_user(self, account, pswd, email, coordinate):
         db =  sqlite3.connect(self.db_path)
         db.execute(f"UPDATE users SET pswd=?,email=?,coordinate=?,updateTime=? WHERE id = ?", (pswd, email, coordinate,getTime(),account))
         db.commit()
+        db.close()
 
     def user_sign(self, account):
         db =  sqlite3.connect(self.db_path)
@@ -53,7 +61,8 @@ class DBControl:
         cursor =  db.execute(f"UPDATE users SET signTime=?,success=?,total=? WHERE id = ?", (getTime(),sign_info[0]+1,sign_info[1]+1,account))
         db.commit()
         db.close()
-        return {'code':0,'msg':'签到成功'}
+        logger.info(f"更新用户{account}签到状态成功")
+        return {'code':'ok','msg':'签到成功'}
     
     def get_users_info(self):
         db =  sqlite3.connect(self.db_path)
