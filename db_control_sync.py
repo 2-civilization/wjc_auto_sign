@@ -34,8 +34,8 @@ class DBControl:
     def check_user(self, account):
         db = sqlite3.connect(self.db_path)
         cursor =db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
-        if cursor.fetchone():
-            user_info =  cursor.fetchone()
+        user_info = cursor.fetchone()
+        if user_info:
             lastSignTime = datetime.fromtimestamp(int(user_info[5]) / 1000.0).date()
             now_time = datetime.now(datetime.timezone.utc).date()
             db.close()

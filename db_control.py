@@ -36,8 +36,8 @@ class DBControl:
     async def check_user(self, account):
         db = await aiosqlite.connect(self.db_path)
         cursor = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
-        if await cursor.fetchone():
-            user_info = await cursor.fetchone()
+        user_info = await cursor.fetchone()
+        if user_info:
             lastSignTime = datetime.fromtimestamp(int(user_info[5]) / 1000.0).date()
             now_time = datetime.now(datetime.timezone.utc).date()
             await db.close()
