@@ -1,9 +1,10 @@
 from core import WJC
-from setting import logger,db_get,DB_TABLE,REMOTE_API,TIME_SET,TIME_CHCECK_WAIT,DB_PATH,SIGN_MAX_TRY_TIMES,TIME_SLEEP_WAIT
+from setting import logger,DB_TABLE,REMOTE_API,TIME_SET,TIME_CHCECK_WAIT,DB_PATH,SIGN_MAX_TRY_TIMES,TIME_SLEEP_WAIT
 from queue import Queue
 from datetime import datetime,time
 from db_control_sync import DBControl
 import mail_control
+from time import sleep
 
 class AutoSign:
     def __init__(self):
@@ -14,6 +15,7 @@ class AutoSign:
     def sign(self,account, pswd,coordinate,email) -> bool:
         wjc = WJC(account, pswd)
         wjc.login()
+        info = wjc.getSignTask()
         info = wjc.sign(coordinate,info['info']['aaData'][0]['DM'],info['info']['aaData'][0]['SJDM'])
         if info['code'] == 1:
             logger.info(f"{account} 签到成功")
@@ -82,7 +84,7 @@ class AutoSign:
                     self.__fail_user_sign()
                     break
                 else:
-                    time.sleep(TIME_CHCECK_WAIT)
+                    sleep(TIME_CHCECK_WAIT)
                 users_info = self.db.get_users_info()
                 info = []
                 for user in users_info:
@@ -94,8 +96,10 @@ class AutoSign:
                     })
                 mail_content = mail_control.admin_mail_gen(info)
                 mail_control.user_mail('签到状态',mail_content)
-            time.sleep(TIME_SLEEP_WAIT)
+            sleep(TIME_SLEEP_WAIT)
 
-
+if __name__ == '__main__':
+    auto_sign = AutoSign()
+    auto_sign.time_check()
 
                 

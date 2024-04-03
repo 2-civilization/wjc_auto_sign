@@ -115,9 +115,14 @@ class WJC:
 
         res = self.s.get(api, params=params_load)
         if res.status_code == 200:
-            msg = {'code': 1, 'msg': '成功获取签到任务', 'info': res.json()}
-            logger.info(f"[{msg['code']}] {msg['msg']}")
-            return msg
+            try:
+                msg = {'code': 1, 'msg': '成功获取签到任务', 'info': res.json()}
+                logger.info(f"[{msg['code']}] {msg['msg']}")
+                return msg
+            except requests.exceptions.JSONDecodeError:
+                msg = {'code': 0, 'msg': '获取签到任务失败', 'info': {'code': res.status_code, 'content': res.text}}
+                logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']}")
+                return msg
         else:
             msg = {'code': 0, 'msg': '获取签到任务失败', 'info': {'code': res.status_code, 'content': res.text}}
             logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']}")
