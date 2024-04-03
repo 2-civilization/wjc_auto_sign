@@ -46,10 +46,10 @@ class AutoSign:
             self.q_user.put(u_info)
     
     async def sign_task(self):
-        self.__sign_task_queue()
+        await self.__sign_task_queue()
         while not self.q_user.empty():
             user = self.q_user.get()
-            self.sign(user['account'],user['pswd'],user['coordinate'],user['email'])
+            await self.sign(user['account'],user['pswd'],user['coordinate'],user['email'])
             self.q_user.task_done()
         
     async def __fail_user_sign(self) -> None:
@@ -82,23 +82,24 @@ class AutoSign:
 
                 if start_time <= current_time <= end_time:
                     logger.info('签到开始')
-                    self.sign_task()
-                    self.__fail_user_sign()
+                    await self.sign_task()
+                    await self.__fail_user_sign()
+                    users_info = await self.db.get_users_info()
+                    info = []
+                    for user in users_info:
+                        info.append({
+                            'account':user[0],
+                            'status':(await self.db.check_user(user[0]))['msg'],
+                            'success':user[6],
+                            'total':user[7]
+                        })
+                    mail_content = mail_control.admin_mail_gen(info)
+                    mail_control.user_mail('签到状态',mail_content)
                     break
                 else:
                     logger.info(f'未到签到开始时间，等待{TIME_CHCECK_WAIT}秒后重新开始签到')
                     await asyncio.sleep(TIME_CHCECK_WAIT)
-                users_info = await self.db.get_users_info()
-                info = []
-                for user in users_info:
-                    info.append({
-                        'account':user[0],
-                        'status':(await self.db.check_user(user[0]))['msg'],
-                        'success':user[6],
-                        'total':user[7]
-                    })
-                mail_content = mail_control.admin_mail_gen(info)
-                mail_control.user_mail('签到状态',mail_content)
+               
             logger.info(f'签到结束，等待{TIME_SLEEP_WAIT}')
             await asyncio.sleep(TIME_SLEEP_WAIT)
 

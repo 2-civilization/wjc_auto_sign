@@ -39,7 +39,7 @@ class DBControl:
         user_info = await cursor.fetchone()
         if user_info:
             lastSignTime = datetime.fromtimestamp(int(user_info[5]) / 1000.0).date()
-            now_time = datetime.now(datetime.timezone.utc).date()
+            now_time = datetime.now().date()
             await db.close()
             if lastSignTime == now_time:
                 return {'code':'ok_signed','msg':'该用户已经签到','info':user_info}
