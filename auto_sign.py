@@ -17,11 +17,11 @@ class AutoSign:
         wjc.login()
         info = wjc.getSignTask()
         info = wjc.sign(coordinate,info['info']['aaData'][0]['DM'],info['info']['aaData'][0]['SJDM'])
-        if info['code'] == 1:
+        if info['code'] == 'ok':
             logger.info(f"{account} 签到成功")
             mail_content = mail_control.user_mail_gen(f"签到成功",f"{account} 签到成功",str(info['info']))
             mail_control.user_mail('签到成功',mail_content,email)
-        
+            self.db.user_sign(account)
         else:
             logger.error(f"{account} 签到失败")
             self.q_fail_user.put({
@@ -57,7 +57,7 @@ class AutoSign:
         while not self.q_fail_user.empty() or times_try == SIGN_MAX_TRY_TIMES:
             user = self.q_fail_user.get()
             self.q_fail_user.task_done()
-            self.db.user_sign(user['account'],user['pswd'],user['coordinate'],user['email'])
+            self.db.user_sign(user['account'])
         
         while not self.q_fail_user.empty():
             user = self.q_fail_user.get()

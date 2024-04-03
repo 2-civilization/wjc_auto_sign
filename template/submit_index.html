@@ -135,7 +135,7 @@
                     }
 
                     $.post("/submit", login_form, function (data) {
-                        if (data.code == 0) {
+                        if (data.code == 'ok') {
                             alert("注册&更新信息成功");
                             window.location.href = "/reg_success_page";
                         } else {

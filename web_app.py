@@ -44,7 +44,7 @@ async def submit(request):
     form = request.get_form()
     await DB.add_user(form["username"][0],form["password"][0],form["email"][0],form["coordinates"][0])
     user_mail('注册成功',reg_mail_gen({'username':form["username"][0],'email':form["email"][0],'coordinates':form["coordinates"][0]}),form["email"][0])
-    return json({"code":1,'msg':'提交成功，请检查你的邮箱！'})
+    return json({"code":'ok','msg':'提交成功，请检查你的邮箱！'})
 
 @app.get('/reg_success_page')
 async def reg_success_page(request):
@@ -55,9 +55,9 @@ async def get_users_info(request):
     form = request.get_form()
     if form["token"][0] == REMOTE_API_TOKEN:
         users = await DB.get_users_info()
-        return json({"code":1,"msg":'验证成功','data':users})
+        return json({"code":'ok',"msg":'验证成功','data':users})
     else:
-        return json({"code":0,'msg':'验证失败'})
+        return json({"code":'fail','msg':'验证失败'})
 
 
 if __name__ == '__main__':

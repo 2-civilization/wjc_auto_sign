@@ -49,26 +49,26 @@ class WJC:
                     'salt': html.xpath('//input[@id="pwdEncryptSalt"][1]/@value')[0],
                     'execution': html.xpath('//input[@id="execution"][1]/@value')[0]
                 })
-                msg = {'code': 1, 'msg': '成功获取加密参数出现错误', 'info': {}}
+                msg = {'code': 'ok', 'msg': '成功获取加密参数出现错误', 'info': {}}
                 logger.info(f"[{msg['code']}] {msg['msg']}")
                 return msg
             except Exception as e:
-                msg = {'code': -1, 'msg': '尝试获取加密参数出现错误，错误信息会被保存于info中', 'info': {'msg': e}}
+                msg = {'code': 'error', 'msg': '尝试获取加密参数出现错误，错误信息会被保存于info中', 'info': {'msg': e}}
                 logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']['msg']}")
                 return msg
         else:
-            msg = {'code': 0, 'msg': '请求登录界面失败，具体信息将会被保存在info中',
+            msg = {'code': 'fail', 'msg': '请求登录界面失败，具体信息将会被保存在info中',
                     'info': {'code': res.status_code, 'content': res.text}}
             logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']['code']}\n{msg['info']['content']}")
             return msg
 
     def login(self):
         if not self.account or not self.pswd:
-            msg = {'code': 0, 'msg': '账号或密码不能为空', 'info': {}}
+            msg = {'code': 'fail', 'msg': '账号或密码不能为空', 'info': {}}
             logger.error(f"[{msg['code']}] {msg['msg']}")
             return msg
         if not self.__login_form.get('salt') or not self.__login_form.get('execution'):
-            msg = {'code': 0, 'msg': '无加密参数', 'info': {}}
+            msg = {'code': 'fail', 'msg': '无加密参数', 'info': {}}
             logger.error(f"[{msg['code']}] {msg['msg']}")
             return msg
 
@@ -96,7 +96,7 @@ class WJC:
         cookie = ''
         for k,v in self.s.cookies.get_dict().items():
             cookie += k+'='+v+';'
-        msg = {'code':1,'msg':f'({self.account})登录成功','info':{}}
+        msg = {'code':'ok','msg':f'({self.account})登录成功','info':{}}
         logger.info(f"[{msg['code']}] {msg['msg']}")
         return msg
     
@@ -116,15 +116,15 @@ class WJC:
         res = self.s.get(api, params=params_load)
         if res.status_code == 200:
             try:
-                msg = {'code': 1, 'msg': '成功获取签到任务', 'info': res.json()}
+                msg = {'code': 'ok', 'msg': '成功获取签到任务', 'info': res.json()}
                 logger.info(f"[{msg['code']}] {msg['msg']}")
                 return msg
             except requests.exceptions.JSONDecodeError:
-                msg = {'code': 0, 'msg': '获取签到任务失败', 'info': {'code': res.status_code, 'content': res.text}}
+                msg = {'code': 'fail', 'msg': '获取签到任务失败', 'info': {'code': res.status_code, 'content': res.text}}
                 logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']}")
                 return msg
         else:
-            msg = {'code': 0, 'msg': '获取签到任务失败', 'info': {'code': res.status_code, 'content': res.text}}
+            msg = {'code': 'fail', 'msg': '获取签到任务失败', 'info': {'code': res.status_code, 'content': res.text}}
             logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']}")
             return msg
 
@@ -148,11 +148,11 @@ class WJC:
 
         res = self.s.post(api,params=params_load, data=data_form,headers=self.headers)
         if res.status_code == 200:
-            msg = {'code': 1, 'msg': '成功签到', 'info': res.json()}
+            msg = {'code': 'ok', 'msg': '成功签到', 'info': res.json()}
             logger.info(f"[{msg['code']}] {msg['msg']}")
             return msg
         else:
-            msg = {'code': 0, 'msg': '签到失败', 'info': {'code': res.status_code, 'content': res.text}}
+            msg = {'code': 'fail', 'msg': '签到失败', 'info': {'code': res.status_code, 'content': res.text}}
             logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']}")
             return msg
 
