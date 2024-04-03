@@ -47,14 +47,17 @@ class AutoSign:
         data = await self.db.get_users_info()
         logger.info(f"加载用户 {len(data)} 个")
         for u in data:
-            u_info = {
-                'account':u[0],
-                'pswd':u[1],
-                'coordinate':u[3],
-                'email':u[2]
-            }
-            self.q_user.put(u_info)
-    
+            if (await self.db.check_user(u[0]))['code'] == 'ok':
+                u_info = {
+                    'account':u[0],
+                    'pswd':u[1],
+                    'coordinate':u[3],
+                    'email':u[2]
+                }
+
+                self.q_user.put(u_info)
+        logger.info(f"待签到用户数 {self.q_user.qsize()} 个")
+
     async def sign_task(self):
         await self.__sign_task_queue()
         while not self.q_user.empty():
@@ -99,7 +102,7 @@ class AutoSign:
                     for user in users_info:
                         info.append({
                             'account':user[0],
-                            'status':(await self.db.check_user(user[0]))['msg'],
+                            'status':'是' if (await self.db.check_user(user[0]))['code'] == 'ok_signed' else '否',
                             'success':user[6],
                             'total':user[7]
                         })
