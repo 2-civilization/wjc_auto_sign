@@ -2,7 +2,7 @@ from core import WJC
 from setting import logger,db_get,DB_TABLE,REMOTE_API,TIME_SET,TIME_CHCECK_WAIT,DB_PATH,SIGN_MAX_TRY_TIMES,TIME_SLEEP_WAIT
 from queue import Queue
 from datetime import datetime,time
-from db_control import DBControl
+from db_control_sync import DBControl
 import mail_control
 
 class AutoSign:
