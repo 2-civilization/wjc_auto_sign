@@ -107,7 +107,7 @@ def admin_mail_gen(info_list:list):
     for info in info_list:
         content += '''
             <tr>
-                <td>'''+info['account']+'''</td>
+                <td>'''+str(info['account'])+'''</td>
                 <td>'''+info['status']+'''</td>
                 <td>'''+str(info['success'])+'''</td>
                 <td>'''+str(info['total'])+'''</td>

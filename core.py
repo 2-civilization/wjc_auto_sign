@@ -49,7 +49,7 @@ class WJC:
                     'salt': html.xpath('//input[@id="pwdEncryptSalt"][1]/@value')[0],
                     'execution': html.xpath('//input[@id="execution"][1]/@value')[0]
                 })
-                msg = {'code': 'ok', 'msg': '成功获取加密参数出现错误', 'info': {}}
+                msg = {'code': 'ok', 'msg': '成功获取加密参数', 'info': {}}
                 logger.info(f"[{msg['code']}] {msg['msg']}")
                 return msg
             except Exception as e:

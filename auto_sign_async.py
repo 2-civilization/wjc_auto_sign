@@ -94,12 +94,13 @@ class AutoSign:
                             'total':user[7]
                         })
                     mail_content = mail_control.admin_mail_gen(info)
-                    mail_control.user_mail('签到状态',mail_content)
+                    mail_control.admin_mail('签到状态',mail_content)
                     break
                 else:
                     logger.info(f'未到签到开始时间，等待{TIME_CHCECK_WAIT}秒后重新开始签到')
                     await asyncio.sleep(TIME_CHCECK_WAIT)
-               
+                    continue
+                
             logger.info(f'签到结束，等待{TIME_SLEEP_WAIT}')
             await asyncio.sleep(TIME_SLEEP_WAIT)
 
