@@ -55,6 +55,16 @@ class DBControl:
         await db.commit()
         await db.close()
 
+    async def user_try_add(self,account):
+        db = await aiosqlite.connect(self.db_path)
+        cursor = await db.execute(f"SELECT total FROM users WHERE id = ?", (account,))
+        sign_info = await cursor.fetchone()
+        cursor = await db.execute(f"UPDATE users SET total=? WHERE id = ?", (sign_info[0]+1,account))
+        await db.commit()
+        await db.close()
+        logger.info(f"更新用户{account}签到次数成功")
+        return {'code':'ok','msg':f"更新用户{account}签到次数成功"}
+
     async def user_sign(self, account):
         db = await aiosqlite.connect(self.db_path)
         cursor = await db.execute(f"SELECT success,total FROM users WHERE id = ?", (account,))
@@ -63,7 +73,7 @@ class DBControl:
         await db.commit()
         await db.close()
         logger.info(f"更新用户{account}签到状态成功")
-        return {'code':'ok','msg':'签到成功'}
+        return {'code':'ok','msg':f"更新用户{account}签到状态成功"}
     
     async def get_users_info(self):
         db = await aiosqlite.connect(self.db_path)

@@ -63,6 +63,7 @@ class WJC:
             return msg
 
     def login(self):
+        logger.info(f"开始登录账号{self.account}")
         if not self.account or not self.pswd:
             msg = {'code': 'fail', 'msg': '账号或密码不能为空', 'info': {}}
             logger.error(f"[{msg['code']}] {msg['msg']}")
@@ -96,7 +97,7 @@ class WJC:
         cookie = ''
         for k,v in self.s.cookies.get_dict().items():
             cookie += k+'='+v+';'
-        msg = {'code':'ok','msg':f'({self.account})登录成功','info':{}}
+        msg = {'code':'ok','msg':f'({self.account})获取Cookies','info':{}}  # 不代表登录成功
         logger.info(f"[{msg['code']}] {msg['msg']}")
         return msg
     
