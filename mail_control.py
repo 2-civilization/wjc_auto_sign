@@ -1,5 +1,7 @@
 import yagmail
 from setting import MAIL_SET,logger
+from smtplib import SMTPDataError
+
 
 def admin_mail(subject:str, contents:str) -> None:
     yag = yagmail.SMTP(user=MAIL_SET['account'], password=MAIL_SET['token'], host=MAIL_SET['host'])
@@ -8,9 +10,12 @@ def admin_mail(subject:str, contents:str) -> None:
 
 
 def user_mail(subject:str, contents:str, user:str) -> None:
-    yag = yagmail.SMTP(user=MAIL_SET['account'], password=MAIL_SET['token'], host=MAIL_SET['host'])
-    yag.send(to=user, subject=subject, contents=contents)
-    logger.info(f'用户邮件发送成功！->{user}')
+    try:
+        yag = yagmail.SMTP(user=MAIL_SET['account'], password=MAIL_SET['token'], host=MAIL_SET['host'])
+        yag.send(to=user, subject=subject, contents=contents)
+        logger.info(f'用户邮件发送成功！->{user}')
+    except SMTPDataError:
+        logger.error(f'用户邮件发送失败！邮箱地址可能错误。->{user}')
 
 def user_mail_gen(title:str,info:str,code:str):
     content = '''
