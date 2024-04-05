@@ -9,13 +9,15 @@ def admin_mail(subject:str, contents:str) -> None:
     logger.info('管理员邮件发送成功！')
 
 
-def user_mail(subject:str, contents:str, user:str) -> None:
+def user_mail(subject:str, contents:str, user:str) -> bool:
     try:
         yag = yagmail.SMTP(user=MAIL_SET['account'], password=MAIL_SET['token'], host=MAIL_SET['host'])
         yag.send(to=user, subject=subject, contents=contents)
         logger.info(f'用户邮件发送成功！->{user}')
+        return True
     except SMTPDataError:
         logger.error(f'用户邮件发送失败！邮箱地址可能错误。->{user}')
+        return False
 
 def user_mail_gen(title:str,info:str,code:str):
     content = '''

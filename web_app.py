@@ -42,9 +42,11 @@ async def getLocal(request):
 @app.post('/submit')
 async def submit(request):
     form = request.get_form()
-    await DB.add_user(form["username"][0],form["password"][0],form["email"][0],form["coordinates"][0])
-    user_mail('注册成功',reg_mail_gen({'account':form["username"][0],'email':form["email"][0],'coordinate':form["coordinates"][0]}),form["email"][0])
-    return json({"code":'ok','msg':'提交成功，请检查你的邮箱！'})
+    if user_mail('注册成功',reg_mail_gen({'account':form["username"][0],'email':form["email"][0],'coordinate':form["coordinates"][0]}),form["email"][0]):
+        await DB.add_user(form["username"][0],form["password"][0],form["email"][0],form["coordinates"][0])
+        return json({"code":'ok','msg':'提交成功，请检查你的邮箱！'})
+    else:
+        return json({"code":'fail','msg':'提交失败，请检查你的邮箱地址是否填写正确！'})
 
 @app.get('/reg_success_page')
 async def reg_success_page(request):
