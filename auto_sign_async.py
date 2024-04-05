@@ -80,7 +80,7 @@ class AutoSign:
     async def __fail_user_sign(self) -> None:
         logger.info('重试队列开始')
         times_try = 1
-        while not self.q_fail_user.empty() and times_try <= 0:
+        while not self.q_fail_user.empty() and times_try <= SIGN_MAX_TRY_TIMES:
             logger.info(f"第 {times_try} 次重试开始")
             user = self.q_fail_user.get()
             self.q_fail_user.task_done()
