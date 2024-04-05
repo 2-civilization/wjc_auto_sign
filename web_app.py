@@ -61,7 +61,10 @@ async def get_users_info(request):
     else:
         return json({"code":'fail','msg':'验证失败'})
 
+@app.get('/favicon.ico')
+async def get_favicon(request):
+    return await file(Path(NOW_FILE_PATH+"/template/favicon.ico"))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080,debug=True)
-
+    app.run('0.0.0.0', port=8080,debug=True)
+    # app.run('::',443,ssl='/home/admin/certificate/')
