@@ -21,19 +21,23 @@ class DBControl:
     
     async def add_user(self, account, pswd, email, coordinate):
         db = await aiosqlite.connect(self.db_path)
-        cursor = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
-        if await cursor.fetchone():
+        cursor_by_account = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
+        cursor_by_email = await db.execute(f"SELECT * FROM users WHERE email = ?", (email,))
+        if await cursor_by_account.fetchone() or await cursor_by_email.fetchone():
             logger.info(f"添加或更新用户{account} 添加成功")
             await db.close()
             return await self.update_user(account, pswd, email, coordinate)
         else:
-
             await db.execute(f"INSERT INTO users (id,pswd,email,coordinate,updateTime,signTime,success,total) VALUES (?,?,?,?,?,?,?,?)", (account, pswd, email, coordinate, getTime(), 0, 0, 0))
             await db.commit()
             await db.close()
             logger.info(f"添加或更新用户{account} 添加成功")
     
     async def check_user(self, account):
+        """
+        检查用户是否签到
+
+        """
         db = await aiosqlite.connect(self.db_path)
         cursor = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
         user_info = await cursor.fetchone()
@@ -47,13 +51,52 @@ class DBControl:
                 return {'code':'ok','msg':'该用户未签到','info':user_info}
         else:
             await db.close()
-            return {'code':'fail','msg':'用户不存在'}
+            return {'code':'fail','msg':'用户不存在','info':None}
     
-    async def update_user(self, account, pswd, email, coordinate):
+    async def __update_user_by_account(self, account, pswd, email, coordinate):
         db = await aiosqlite.connect(self.db_path)
         await db.execute(f"UPDATE users SET pswd=?,email=?,coordinate=?,updateTime=? WHERE id = ?", (pswd, email, coordinate,getTime(),account))
         await db.commit()
         await db.close()
+
+    async def __update_user_by_email(self, account, pswd, email, coordinate):
+        db = await aiosqlite.connect(self.db_path)
+        await db.execute(f"UPDATE users SET id=?,pswd=?,coordinate=?,updateTime=? WHERE email=?", (account,pswd,coordinate,getTime(),email))
+        await db.commit()
+        await db.close()
+
+    async def update_user(self, account, pswd, email, coordinate):
+        """
+        附带账号检查的账号更新
+
+        若账号可查询，则以账号更新优先，更新剩余数据；若账号不可查，则以邮箱优先，更新剩余数据。
+        传入数据至少要做到邮箱准确可查
+        
+        :param account: 账号
+        :param pswd: 密码
+        :param email: 邮箱
+        :param coordinate: 签到坐标
+        :return: None
+        """
+        db = await aiosqlite.connect(self.db_path)
+        cursor_by_account = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
+        cursor_by_email = await db.execute(f"SELECT * FROM users WHERE email = ?", (email,))
+    
+        if await cursor_by_account.fetchone():
+            db.close()
+            await self.__update_user_by_account(account, pswd, email, coordinate)
+            logger.info(f"更新用户{account}信息成功[账号优先 {account}]")
+            return {'code':'ok','msg':f"更新用户{account}信息成功[账号优先 {account}]"}
+        elif await cursor_by_email.fetchone():
+            db.close()
+            await self.__update_user_by_email(account,pswd,email,coordinate)
+            logger.info(f"更新用户{account}信息成功[邮箱优先 {email}]")
+            return {'code':'ok','msg':f"更新用户{account}信息成功[邮箱优先 {email}]"}
+        else:
+            db.close()
+            logger.info(f"更新用户{account}信息失败[账号或邮箱不存在 {email}]")
+            return {'code':'fail','msg':f"更新用户{account}信息失败[账号或邮箱不存在 {email}]"}
+
 
     async def user_try_add(self,account):
         db = await aiosqlite.connect(self.db_path)
