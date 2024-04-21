@@ -3,12 +3,14 @@
 芜湖学院（原 安徽师范大学皖江学院） 签到自动化
 
 目前实现：
+
 - 签到端
   - 用于从数据库中提取用户数据并在规定时间内启动签到任务，完成后自动等待至下一次签到开始。
 - 注册信息端
   - 提供Web页面向用户提供注册功能，将用户提交的信息保存至数据库供签到端使用
 
 待实现：
+
 - 两端分离，签到端自动同步数据库
 - （Web）为用户提供取消签到功能，用户可自行选择是否启用自动签到（是否停用）
 - 对于签到次数过多的账号，将会自动停用该账号
@@ -19,14 +21,17 @@
 ## 使用说明
 
 ### 准备环境：
+
 - Python3.8+
 
 使用pip安装依赖：
+
 ```shell
 pip install -r requirements_web.txt
 ```
 
 > 如果你只用于本地使用且不需要Web页面提供注册功能，可选择手动向signinInfo.db中添加数据。同时选择安装以下依赖即可：
+> 
 > ```shell
 > pip install -r requirements.txt
 > ```
@@ -59,6 +64,7 @@ pip install -r requirements_web.txt
 #### 使用Web端添加数据
 
 启动Web端
+
 ```shell
 python web_app.py
 ```
@@ -76,6 +82,7 @@ python web_app.py
 2024年学校官网及统一认证平台功能逐步上线正常，网页中终于可通过一些手段进入，便于抓包逆向。
 
 签到步骤：
+
 - 根据设置的账号密码登录获取必要的Token或Cookies
 - (额外)检测是否需要验证，如若需要则启动反验证码模块
 - 携带必要信息查询签到任务
@@ -87,6 +94,7 @@ python web_app.py
 ### 登录
 
 API:
+
 - URL:`https://ids.uwh.edu.cn/authserver/login?service=https://ehall.uwh.edu.cn/login`
 - METHOD: GET | POST
 - PARAMS: NONE
@@ -103,6 +111,7 @@ API:
 前置页：需要预先GET此页，包含了POST时所需的必要信息（data和cookie）
 
 API:
+
 - URL:`https://ehall.uwh.edu.cn/student/cas`
 - METHOD: POST
 
@@ -111,12 +120,14 @@ API:
 ### 获取签到任务
 
 API: 
+
 - URL: 'https://ehall.uwh.edu.cn/student/content/tabledata/student/sign/stu/sign'
 - METHOD: GET
 - PARAMS: 见下
 - RESPONSE-TYPE: (JSON)见下
 
 Params:
+
 ```python
 params_load = {
             "bSortable_0": "false",
@@ -129,44 +140,44 @@ params_load = {
             "_t_s_": "1711441937310"
         }
 ```
+
 其中`_t_s_`为13位时间戳
 
 Response:
+
 ```json
-
 {
-	"sEcho": 1,
-	"iDisplayStart": 0,
-	"iDisplayLength": 12,
-	"iSortColList": [2],
-	"sSortDirList": ["desc"],
-	"iTotalRecords": 1,
-	"iTotalDisplayRecords": 1,
-	"aaData": [{
-		"UPDATE_COUNT": 2,
-		"JSSJ": "2024-03-26 23:00:00",
-		"QDFS": "1",
-		"SJDM": "17112924123429681075",
-		"QDCS": null,
-		"VALID": "0",
-		"DM": "17089192567824456997",
-		"JLDM": null,
-		"QDWZ_DZ": null,
-		"QDLB": "晚间签到",
-		"QDSJ": null,
-		"UPDATE_IND": "1",
-		"FBR": "张铮",
-		"SUBJECT": "江北校区晚间签到",
-		"KSSJ": "2024-03-26 20:30:00",
-		"ISFZR": "0"
-	}]
+    "sEcho": 1,
+    "iDisplayStart": 0,
+    "iDisplayLength": 12,
+    "iSortColList": [2],
+    "sSortDirList": ["desc"],
+    "iTotalRecords": 1,
+    "iTotalDisplayRecords": 1,
+    "aaData": [{
+        "UPDATE_COUNT": 2,
+        "JSSJ": "2024-03-26 23:00:00",
+        "QDFS": "1",
+        "SJDM": "17112924123429681075",
+        "QDCS": null,
+        "VALID": "0",
+        "DM": "17089192567824456997",
+        "JLDM": null,
+        "QDWZ_DZ": null,
+        "QDLB": "晚间签到",
+        "QDSJ": null,
+        "UPDATE_IND": "1",
+        "FBR": "张铮",
+        "SUBJECT": "江北校区晚间签到",
+        "KSSJ": "2024-03-26 20:30:00",
+        "ISFZR": "0"
+    }]
 }
-
 ```
 
 成功签到示例：
-```json
 
+```json
 {
     "code": 1,
     "msg": "成功获取签到任务",
@@ -200,11 +211,10 @@ Response:
         ]
     }
 }
-
 ```
 
-
 其中:
+
 - `JSSJ`：签到结束时间
 - `KSSJ`: 签到开始时间
 - `SJDM`和`DM`: 后续签到需要用到的信息。
@@ -213,9 +223,6 @@ Response:
 - `VALID`: 
   - `"0"`：未开始
   - `"1"`：已开始
-- 
-
-
 
 ## 更新日志
 
