@@ -5,7 +5,7 @@ from pathlib import Path
 from db_control import DBControl
 from setting import DB_PATH,REMOTE_API_TOKEN,TIME_SET
 from mail_control import user_mail,reg_mail_gen
-from datetime import datetime,time
+from datetime import datetime,time,timedelta
 
 NOW_FILE_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -18,6 +18,8 @@ async def is_db_locked() -> bool:
     # 获取当前时间
     now = datetime.now()
     current_time = now.time()
+    # 增加1s的延迟
+    current_time += timedelta(seconds=1)
 
     # 将时间区间转换为datetime.time对象
     start_time = time(hour=int(TIME_SET['start'].split(':')[0]), minute=int(TIME_SET['start'].split(':')[1]))
