@@ -17,10 +17,10 @@ app = Sanic("webSubmitter")
 async def is_db_locked() -> bool:
     # 获取当前时间
     now = datetime.now()
-    current_time = now.time()
     # 增加1s的延迟
-    current_time += timedelta(seconds=1)
-
+    now += timedelta(seconds=1)
+    current_time = now.time()
+    
     # 将时间区间转换为datetime.time对象
     start_time = time(hour=int(TIME_SET['start'].split(':')[0]), minute=int(TIME_SET['start'].split(':')[1]))
     end_time = time(hour=int(TIME_SET['end'].split(':')[0]), minute=int(TIME_SET['end'].split(':')[1]))
