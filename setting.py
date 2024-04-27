@@ -36,7 +36,7 @@ FAIL_MAX_TRY_DAYS = 3   # 最大连续失败签到天数，达到该天数后将
 
 DB_INIT_SQL = '''
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER NOT NULL PRIMARY KEY UNIQUE,
+        id INTEGER NOT NULL PRIMARY KEY,
         pswd TEXT NOT NULL,
         email TEXT NOT NULL,
         coordinate TEXT NOT NULL,
