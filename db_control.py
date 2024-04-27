@@ -2,7 +2,7 @@ import aiosqlite
 import asyncio
 from time import time
 from datetime import datetime
-from setting import logger,DB_INIT_SQL
+from setting import logger,DB_INIT_SQL,SIGN_MAX_TRY_TIMES,FAIL_MAX_TRY_DAYS
 
 def getTime():
     return str(time()).replace('.','')[:13]
@@ -28,7 +28,7 @@ class DBControl:
             await db.close()
             return await self.update_user(account, pswd, email, coordinate)
         else:
-            await db.execute(f"INSERT INTO users (id,pswd,email,coordinate,updateTime,signTime,success,total) VALUES (?,?,?,?,?,?,?,?)", (account, pswd, email, coordinate, getTime(), 0, 0, 0))
+            await db.execute(f"INSERT INTO users (id,pswd,email,coordinate,updateTime,signTime,success,total,active) VALUES (?,?,?,?,?,?,?,?)", (account, pswd, email, coordinate, getTime(), 0, 0, 0,1))
             await db.commit()
             await db.close()
             logger.info(f"添加或更新用户{account} 添加成功")
@@ -125,4 +125,31 @@ class DBControl:
         await db.close()
         return users_info
     
-    
+    async def deactive_user(self,account) -> bool:
+        '''
+        申请对签到失败的用户，将其停用
+
+        会自动判断是否符合禁用条件并做出相应的处理。
+        :param account: 用户账号
+        :return: 如果符合禁用条件，将会禁用并返回True，否则返回False
+        '''
+        db = await aiosqlite.connect(self.db_path)
+        cursor = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
+        user_info = await cursor.fetchone()
+        if (user_info[7] - user_info[6])/SIGN_MAX_TRY_TIMES >= FAIL_MAX_TRY_DAYS:
+            await db.execute(f"UPDATE users SET active=? WHERE id = ?", (0,account))
+            await db.commit()
+            logger.info(f"由于连续签到失败，用户{account}被禁用")
+            await db.close()
+            return True
+        else:
+            await db.close()
+            return False
+        
+
+
+
+
+
+
+
