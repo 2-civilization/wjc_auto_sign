@@ -59,6 +59,10 @@ class AutoSign:
         data = await self.db.get_users_info()
         logger.info(f"加载用户 {len(data)} 个")
         for u in data:
+            if not u[8]:
+                # active 0 跳过该用户
+                continue
+
             if (await self.db.check_user(u[0]))['code'] == 'ok':
                 u_info = {
                     'account':u[0],
@@ -95,7 +99,16 @@ class AutoSign:
             mail_control.user_mail('签到失败',mail_content,user['email'])
             self.q_fail_user.task_done()
             logger.info(f"向用户{user['account']}发送签到失败信息成功")
-    
+
+            # 添加失败天数
+            await self.db.user_fail_day_add(user['account'])
+
+            # 尝试封禁失败用户
+            if self.db.deactive_user(user['account']):
+                mail_content = mail_control.ban_mail_gen(user['account'])
+                mail_control.user_mail('自动签到停止',mail_content,user['email'])
+                logger.info(f"向用户{user['account']}发送账号禁用成功")
+        
     async def time_check(self):
         logger.info('时间检查开始')
         while True:
