@@ -2,7 +2,7 @@ import aiosqlite
 import asyncio
 from time import time
 from datetime import datetime
-from setting import logger,DB_INIT_SQL,SIGN_MAX_TRY_TIMES,FAIL_MAX_TRY_DAYS
+from setting import logger,DB_INIT_SQL,FAIL_MAX_TRY_DAYS
 
 def getTime():
     return str(time()).replace('.','')[:13]
@@ -55,13 +55,13 @@ class DBControl:
     
     async def __update_user_by_account(self, account, pswd, email, coordinate):
         db = await aiosqlite.connect(self.db_path)
-        await db.execute(f"UPDATE users SET pswd=?,email=?,coordinate=?,updateTime=? WHERE id = ?", (pswd, email, coordinate,getTime(),account))
+        await db.execute(f"UPDATE users SET pswd=?,email=?,coordinate=?,updateTime=?,failDays=0,active=1 WHERE id = ?", (pswd, email, coordinate,getTime(),account))
         await db.commit()
         await db.close()
 
     async def __update_user_by_email(self, account, pswd, email, coordinate):
         db = await aiosqlite.connect(self.db_path)
-        await db.execute(f"UPDATE users SET id=?,pswd=?,coordinate=?,updateTime=? WHERE email=?", (account,pswd,coordinate,getTime(),email))
+        await db.execute(f"UPDATE users SET id=?,pswd=?,coordinate=?,updateTime=?,failDays=0,active=1 WHERE email=?", (account,pswd,coordinate,getTime(),email))
         await db.commit()
         await db.close()
 
@@ -136,7 +136,7 @@ class DBControl:
         db = await aiosqlite.connect(self.db_path)
         cursor = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
         user_info = await cursor.fetchone()
-        if (user_info[7] - user_info[6])/SIGN_MAX_TRY_TIMES >= FAIL_MAX_TRY_DAYS:
+        if user_info[9]>=FAIL_MAX_TRY_DAYS:
             await db.execute(f"UPDATE users SET active=? WHERE id = ?", (0,account))
             await db.commit()
             logger.info(f"由于连续签到失败，用户{account}被禁用")
@@ -146,9 +146,21 @@ class DBControl:
             await db.close()
             return False
         
-
-
-
+    async def user_fail_day_add(self,account):
+        db = await aiosqlite.connect(self.db_path)
+        cursor = await db.execute(f"SELECT failDay FROM users WHERE id = ?", (account,))
+        fail_day = await cursor.fetchone()
+        cursor = await db.execute(f"UPDATE users SET failDay=? WHERE id = ?", (fail_day[0]+1,account))
+        logger.info(f"用户{account}连续签到失败{fail_day[0]+1}天")
+        await db.commit()
+        await db.close()
+    
+    async def reset_fail_day(self,account):
+        db = await aiosqlite.connect(self.db_path)
+        await db.execute(f"UPDATE users SET failDay=0 WHERE id = ?", (account))
+        logger.info(f"重置用户{account}连续签到失败天数")
+        await db.commit()
+        await db.close()
 
 
 
