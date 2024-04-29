@@ -104,8 +104,8 @@ class AutoSign:
             await self.db.user_fail_day_add(user['account'])
 
             # 尝试封禁失败用户
-            if self.db.deactive_user(user['account']):
-                mail_content = mail_control.ban_mail_gen(user['account'])
+            if await self.db.deactive_user(user['account']):
+                mail_content = mail_control.ban_mail_gen(str(user['account']))
                 mail_control.user_mail('自动签到停止',mail_content,user['email'])
                 logger.info(f"向用户{user['account']}发送账号禁用成功")
         
@@ -137,7 +137,8 @@ class AutoSign:
                             'account':user[0],
                             'status':'是' if (await self.db.check_user(user[0]))['code'] == 'ok_signed' else '否',
                             'success':user[6],
-                            'total':user[7]
+                            'total':user[7],
+                            'active':user[8],
                         })
                     mail_content = mail_control.admin_mail_gen(info)
                     mail_control.admin_mail('签到状态',mail_content)
