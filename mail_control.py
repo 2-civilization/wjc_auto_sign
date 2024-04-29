@@ -62,6 +62,9 @@ def user_mail_gen(title:str,info:str,code:str):
     return content
 
 def admin_mail_gen(info_list:list):
+    def __active_str_gen(active:int)->str:
+        return '启用' if info['active'] else '禁用'
+
     content = '''
 <!DOCTYPE html>
 <html lang="zh">
@@ -122,8 +125,7 @@ def admin_mail_gen(info_list:list):
                 <td>'''+info['status']+'''</td>
                 <td>'''+str(info['success'])+'''</td>
                 <td>'''+str(info['total'])+'''</td>
-                <td>'''+'启用' if info['active'] else '禁用'+'''</td>
-            </tr>
+                <td>'''+__active_str_gen(info['active'])+'''</td></tr>
         '''
     content += '''
         </tbody>
