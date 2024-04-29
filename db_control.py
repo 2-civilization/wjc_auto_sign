@@ -148,16 +148,16 @@ class DBControl:
         
     async def user_fail_day_add(self,account):
         db = await aiosqlite.connect(self.db_path)
-        cursor = await db.execute(f"SELECT failDay FROM users WHERE id = ?", (account,))
+        cursor = await db.execute(f"SELECT failDays FROM users WHERE id = ?", (account,))
         fail_day = await cursor.fetchone()
-        cursor = await db.execute(f"UPDATE users SET failDay=? WHERE id = ?", (fail_day[0]+1,account))
+        cursor = await db.execute(f"UPDATE users SET failDays=? WHERE id = ?", (fail_day[0]+1,account))
         logger.info(f"用户{account}连续签到失败{fail_day[0]+1}天")
         await db.commit()
         await db.close()
     
     async def reset_fail_day(self,account):
         db = await aiosqlite.connect(self.db_path)
-        await db.execute(f"UPDATE users SET failDay=0 WHERE id = ?", (account))
+        await db.execute(f"UPDATE users SET failDays=0 WHERE id = ?", (account))
         logger.info(f"重置用户{account}连续签到失败天数")
         await db.commit()
         await db.close()
