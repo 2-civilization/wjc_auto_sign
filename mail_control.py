@@ -1,12 +1,16 @@
 import yagmail
+import yagmail.error
 from setting import MAIL_SET,logger
 from smtplib import SMTPDataError
 
 
 def admin_mail(subject:str, contents:str) -> None:
-    yag = yagmail.SMTP(user=MAIL_SET['account'], password=MAIL_SET['token'], host=MAIL_SET['host'])
-    yag.send(to=MAIL_SET['admin'], subject=subject, contents=contents)
-    logger.info('管理员邮件发送成功！')
+    try:
+        yag = yagmail.SMTP(user=MAIL_SET['account'], password=MAIL_SET['token'], host=MAIL_SET['host'])
+        yag.send(to=MAIL_SET['admin'], subject=subject, contents=contents)
+        logger.info('管理员邮件发送成功！')
+    except Exception as e:
+        logger.error(f'管理员邮件发送失败！可能是由于是邮箱设置有误->{e}')
 
 
 def user_mail(subject:str, contents:str, user:str) -> bool:
@@ -15,7 +19,7 @@ def user_mail(subject:str, contents:str, user:str) -> bool:
         yag.send(to=user, subject=subject, contents=contents)
         logger.info(f'用户邮件发送成功！->{user}')
         return True
-    except SMTPDataError:
+    except SMTPDataError or yagmail.error.YagInvalidEmailAddress:
         logger.error(f'用户邮件发送失败！邮箱地址可能错误。->{user}')
         return False
 
@@ -58,6 +62,9 @@ def user_mail_gen(title:str,info:str,code:str):
     return content
 
 def admin_mail_gen(info_list:list):
+    def __active_str_gen(active:int)->str:
+        return '启用' if info['active'] else '禁用'
+
     content = '''
 <!DOCTYPE html>
 <html lang="zh">
@@ -99,7 +106,6 @@ def admin_mail_gen(info_list:list):
 <body>
     <h1>今日签到</h1>
     <p>以下为今日签到的状态</p>
-
     <table>
         <thead>
             <tr>
@@ -107,6 +113,7 @@ def admin_mail_gen(info_list:list):
                 <th>是否签到</th>
                 <th>成功次数</th>
                 <th>总次数</th>
+                <th>状态</th>
             </tr>
         </thead>
         <tbody>
@@ -118,7 +125,7 @@ def admin_mail_gen(info_list:list):
                 <td>'''+info['status']+'''</td>
                 <td>'''+str(info['success'])+'''</td>
                 <td>'''+str(info['total'])+'''</td>
-            </tr>
+                <td>'''+__active_str_gen(info['active'])+'''</td></tr>
         '''
     content += '''
         </tbody>
@@ -166,3 +173,36 @@ def reg_mail_gen(info:dict):
     '''
     return content
 
+def ban_mail_gen(account:str):
+    content = '''
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        h1, p {
+            text-align: center;
+        }
+    </style>
+    <title>自动签到账户停用通知</title>
+</head>
+<body>
+    <h1>你已无法继续使用自动签到</h1>
+    <p>这是一封由程序自动生成的邮件，请勿回复！</p>
+    <p>由于你提供的账号信息在3天内连续签到失败，且你未能及时更新信息，现在已经停止为你自动签到！</p>
+    <p>如果你希望继续使用，请及时更新你注册的账号信息。</p>
+    <p>你提供的账号信息：'''+account+'''</p>
+</body>
+</html>
+'''
+    return content

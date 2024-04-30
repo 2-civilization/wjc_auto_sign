@@ -59,6 +59,10 @@ class AutoSign:
         data = await self.db.get_users_info()
         logger.info(f"加载用户 {len(data)} 个")
         for u in data:
+            if not u[8]:
+                # active 0 跳过该用户
+                continue
+
             if (await self.db.check_user(u[0]))['code'] == 'ok':
                 u_info = {
                     'account':u[0],
@@ -80,7 +84,7 @@ class AutoSign:
     async def __fail_user_sign(self) -> None:
         logger.info('重试队列开始')
         times_try = 1
-        while not self.q_fail_user.empty() and times_try <= SIGN_MAX_TRY_TIMES:
+        while not self.q_fail_user.empty() and times_try < SIGN_MAX_TRY_TIMES:
             logger.info(f"第 {times_try} 次重试开始")
             user = self.q_fail_user.get()
             self.q_fail_user.task_done()
@@ -95,7 +99,16 @@ class AutoSign:
             mail_control.user_mail('签到失败',mail_content,user['email'])
             self.q_fail_user.task_done()
             logger.info(f"向用户{user['account']}发送签到失败信息成功")
-    
+
+            # 添加失败天数
+            await self.db.user_fail_day_add(user['account'])
+
+            # 尝试封禁失败用户
+            if await self.db.deactive_user(user['account']):
+                mail_content = mail_control.ban_mail_gen(str(user['account']))
+                mail_control.user_mail('自动签到停止',mail_content,user['email'])
+                logger.info(f"向用户{user['account']}发送账号禁用成功")
+        
     async def time_check(self):
         logger.info('时间检查开始')
         while True:
@@ -124,7 +137,8 @@ class AutoSign:
                             'account':user[0],
                             'status':'是' if (await self.db.check_user(user[0]))['code'] == 'ok_signed' else '否',
                             'success':user[6],
-                            'total':user[7]
+                            'total':user[7],
+                            'active':user[8],
                         })
                     mail_content = mail_control.admin_mail_gen(info)
                     mail_control.admin_mail('签到状态',mail_content)
