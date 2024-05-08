@@ -21,6 +21,7 @@ class AutoSign:
                 return __info[1]
         return '未知错误'
 
+    @logger.catch
     async def sign(self,account, pswd,coordinate,email) -> bool:
         wjc = WJC(account, pswd)
         wjc.login()
@@ -80,7 +81,8 @@ class AutoSign:
             user = self.q_user.get()
             await self.sign(user['account'],user['pswd'],user['coordinate'],user['email'])
             self.q_user.task_done()
-        
+    
+    @logger.catch
     async def __fail_user_sign(self) -> None:
         logger.info('重试队列开始')
         times_try = 1
@@ -125,7 +127,8 @@ class AutoSign:
                 if TIME_CHCECK_WAIT <1:
                     TIME_CHCECK_WAIT = 1
 
-                if start_time <= current_time <= end_time:
+                #if start_time <= current_time <= end_time:
+                if True:
                     logger.info('签到开始')
                     await self.sign_task()
                     await self.__fail_user_sign()
@@ -152,6 +155,7 @@ class AutoSign:
             logger.info(f'签到结束，等待{TIME_SLEEP_WAIT}')
             await asyncio.sleep(TIME_SLEEP_WAIT)
 
+    @logger.catch
     def run(self):
         asyncio.run(self.time_check())
 

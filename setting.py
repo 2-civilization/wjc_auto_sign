@@ -2,6 +2,8 @@ import logging
 import os.path as os_path
 from os import mkdir as os_mkdir
 from datetime import datetime
+import loguru
+from sys import stderr
 
 CURRENT_PATH = os_path.dirname(os_path.abspath(__file__))
 
@@ -50,7 +52,7 @@ DB_INIT_SQL = '''
 '''
 
 
-def __logger_set():
+def __old_logger_set():
     # 日志设置
     __current_path = CURRENT_PATH
     __log_dir = os_path.join(__current_path, 'logs')
@@ -78,6 +80,23 @@ def __logger_set():
     __file_handler.setFormatter(__formatter)
     logger.addHandler(__file_handler)
 
+    return logger
+
+def __logger_set(DEBUG_ENV:bool=False):
+    logger = loguru.logger
+    log_file_name = f"./logs/log_{datetime.now().strftime('%Y%m%d_%H-%M-%S')}.log"
+
+    # 自动向屏幕输出日志，因此仅需添加文件Handler
+    logger.add(
+        sink=log_file_name,
+        level='DEBUG',
+        format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+        backtrace=True,
+        diagnose=DEBUG_ENV,     # 显示变量值，不推荐生产环境中设为True
+        enqueue=True,
+        catch=True,
+        retention='1 week'
+    )
     return logger
 
 logger = __logger_set()
