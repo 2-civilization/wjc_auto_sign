@@ -12,3 +12,4 @@ yagmail==0.15.293
 aiosqlite==0.20.0
 sanic==23.12.1
 aiofiles==23.2.1  
+loguru==0.7.2
