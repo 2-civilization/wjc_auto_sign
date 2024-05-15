@@ -3,7 +3,7 @@ from pswd_encrypt import encryptAES
 from lxml import etree
 from time import time as getTime
 from requests.packages import urllib3
-from setting import logger
+from log_setting import logger
 
 urllib3.disable_warnings()
 

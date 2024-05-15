@@ -2,7 +2,8 @@ import aiosqlite
 import asyncio
 from time import time
 from datetime import datetime
-from setting import logger,DB_INIT_SQL,FAIL_MAX_TRY_DAYS
+from setting import DB_INIT_SQL,FAIL_MAX_TRY_DAYS
+from setting import logger
 
 def getTime():
     return str(time()).replace('.','')[:13]

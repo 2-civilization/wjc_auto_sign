@@ -1,7 +1,8 @@
-import logging
 import os.path as os_path
 from os import mkdir as os_mkdir
+import logging
 from datetime import datetime
+
 
 CURRENT_PATH = os_path.dirname(os_path.abspath(__file__))
 
@@ -49,7 +50,6 @@ DB_INIT_SQL = '''
     );
 '''
 
-
 def __logger_set():
     # 日志设置
     __current_path = CURRENT_PATH
@@ -72,7 +72,7 @@ def __logger_set():
 
     # 创建一个FileHandler并设置其保存路径
     # 定义日志文件名，包含启动时刻的日期
-    __log_file_path = os_path.join(__log_dir, f"log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+    __log_file_path = os_path.join(__log_dir, f"olog_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
     __file_handler = logging.FileHandler(__log_file_path,encoding='utf-8')
     __file_handler.setLevel(logging.DEBUG)  # 文件保存所有级别的日志
     __file_handler.setFormatter(__formatter)
