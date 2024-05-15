@@ -1,6 +1,8 @@
 from datetime import datetime
 import loguru
-
+import logging
+from typing import Dict,Any
+import sys
 def __logger_set(DEBUG_ENV:bool=False):
     logger = loguru.logger
     log_file_name = f"./logs/log_{datetime.now().strftime('%Y%m%d_%H-%M-%S')}.log"
@@ -21,41 +23,55 @@ def __logger_set(DEBUG_ENV:bool=False):
 
 logger = __logger_set()
 
-# import os.path as os_path
-# import logging
-# from os import mkdir as os_mkdir
+# S_LOGGING_CONFIG_DEFAULTS: Dict[str, Any] = dict(  # no cov
+#     version=1,
+#     disable_existing_loggers=False,
+#     loggers={
+#         "sanic.root": {"level": "INFO", "handlers": ["console"], "propagate": False},
+#         "sanic.error": {
+#             "level": "INFO",
+#             "handlers": ["error_console"],
+#             "propagate": False,
+#             "qualname": "sanic.error",
+#         },
+#         "sanic.server": {
+#             "level": "INFO",
+#             "handlers": ["console"],
+#             "propagate": False,
+#             "qualname": "sanic.server",
+#         },
+#     },
+#     handlers={
+#         "console": {
+#             "class": "logger.InterceptHandler",
+#         },
+#         "error_console": {
+#             "class": "logger.InterceptHandler",
+#         }
+#     }
+# )
+ 
+# class InterceptHandler(logging.StreamHandler):
+#     def emit(self, record):
+#         # Get corresponding Loguru level if it exists
+#         try:
+#             level = logger.level(record.levelname).name
+#         except ValueError:
+#             level = record.levelno
+#         # Find caller from where originated the logged message
+#         frame, depth = logging.currentframe(), 2
+#         while frame.f_code.co_filename == logging.__file__:
+#             frame = frame.f_back
+#             depth += 1
 
-
-# CURRENT_PATH = os_path.dirname(os_path.abspath(__file__))
-# def __old_logger_set():
-#     # 日志设置
-#     __current_path = CURRENT_PATH
-#     __log_dir = os_path.join(__current_path, 'logs')
-
-#     if not os_path.exists(__log_dir):
-#         os_mkdir(__log_dir)
-
-
-#     # 创建一个logger实例
-#     logger = logging.getLogger('LOGGER')
-#     logger.setLevel(logging.DEBUG)  # 设置日志级别为DEBUG，可以根据需要调整为INFO、ERROR等
-#     __formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-
-#     # 创建一个StreamHandler用于输出到控制台
-#     __console_handler = logging.StreamHandler()
-#     __console_handler.setLevel(logging.INFO)  # 控制台只显示INFO及更高级别的日志
-#     __console_handler.setFormatter(__formatter)
-#     logger.addHandler(__console_handler)
-
-#     # 创建一个FileHandler并设置其保存路径
-#     # 定义日志文件名，包含启动时刻的日期
-#     __log_file_path = os_path.join(__log_dir, f"log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
-#     __file_handler = logging.FileHandler(__log_file_path,encoding='utf-8')
-#     __file_handler.setLevel(logging.DEBUG)  # 文件保存所有级别的日志
-#     __file_handler.setFormatter(__formatter)
-#     logger.addHandler(__file_handler)
-
-#     return logger
-
-# logger = __logger_set()
-
+#         msg = self.format(record) # 官方实现中使用record.getMessage()来获取msg，但在sanic中会漏掉它配置过的日志模板，因此要用self.format(record)
+#         logger.opt(depth=depth, exception=record.exc_info).log(level, msg)
+ 
+ 
+# def setup_log():
+#     logging.root.handlers = [InterceptHandler()]
+#     logging.root.setLevel("DEBUG")
+#     for name in logging.root.manager.loggerDict.keys():
+#         logging.getLogger(name).handlers = []
+#         logging.getLogger(name).propagate = True
+#     logger.configure(handlers=[{"sink": sys.stdout, "serialize": False}])

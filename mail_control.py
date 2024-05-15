@@ -1,8 +1,8 @@
 import yagmail
 import yagmail.error
-from setting import MAIL_SET,logger
+from setting import MAIL_SET
 from smtplib import SMTPDataError
-
+from setting import logger
 
 def admin_mail(subject:str, contents:str) -> None:
     try:

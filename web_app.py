@@ -11,6 +11,8 @@ NOW_FILE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 DB = DBControl(DB_PATH)
 
+# setup_log()
+# app = Sanic("webSubmitter",log_config=S_LOGGING_CONFIG_DEFAULTS)
 app = Sanic("webSubmitter")
 # app.static("/template","D:\\REPOSITORY\\PROJECTS\\Project\\WJC_Sign\\WebSubmitter\\template")
 
@@ -97,5 +99,5 @@ async def get_favicon(request):
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0', port=8888,debug=True)
+    app.run('0.0.0.0', port=8888,debug=True,access_log=False)
     # app.run('::',443,ssl='/home/admin/certificate/')

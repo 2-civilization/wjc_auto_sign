@@ -1,10 +1,11 @@
 from core import WJC
-from setting import logger,DB_TABLE,REMOTE_API,TIME_SET,TIME_CHCECK_WAIT,DB_PATH,SIGN_MAX_TRY_TIMES,TIME_SLEEP_WAIT
+from setting import DB_TABLE,REMOTE_API,TIME_SET,TIME_CHCECK_WAIT,DB_PATH,SIGN_MAX_TRY_TIMES,TIME_SLEEP_WAIT
 from queue import Queue
 from datetime import datetime,time,date
 from db_control import DBControl
 import mail_control
 import asyncio
+from log_setting import logger
 
 class AutoSign:
     def __init__(self):

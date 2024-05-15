@@ -1,4 +1,7 @@
 import os.path as os_path
+from os import mkdir as os_mkdir
+import logging
+from datetime import datetime
 
 
 CURRENT_PATH = os_path.dirname(os_path.abspath(__file__))
@@ -47,3 +50,34 @@ DB_INIT_SQL = '''
     );
 '''
 
+def __logger_set():
+    # 日志设置
+    __current_path = CURRENT_PATH
+    __log_dir = os_path.join(__current_path, 'logs')
+
+    if not os_path.exists(__log_dir):
+        os_mkdir(__log_dir)
+
+
+    # 创建一个logger实例
+    logger = logging.getLogger('LOGGER')
+    logger.setLevel(logging.DEBUG)  # 设置日志级别为DEBUG，可以根据需要调整为INFO、ERROR等
+    __formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+
+    # 创建一个StreamHandler用于输出到控制台
+    __console_handler = logging.StreamHandler()
+    __console_handler.setLevel(logging.INFO)  # 控制台只显示INFO及更高级别的日志
+    __console_handler.setFormatter(__formatter)
+    logger.addHandler(__console_handler)
+
+    # 创建一个FileHandler并设置其保存路径
+    # 定义日志文件名，包含启动时刻的日期
+    __log_file_path = os_path.join(__log_dir, f"olog_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+    __file_handler = logging.FileHandler(__log_file_path,encoding='utf-8')
+    __file_handler.setLevel(logging.DEBUG)  # 文件保存所有级别的日志
+    __file_handler.setFormatter(__formatter)
+    logger.addHandler(__file_handler)
+
+    return logger
+
+logger = __logger_set()
