@@ -4,6 +4,7 @@ from time import time
 from datetime import datetime
 from setting import DB_INIT_SQL,FAIL_MAX_TRY_DAYS
 from setting import logger
+import sqlite3
 
 def getTime():
     return str(time()).replace('.','')[:13]
@@ -24,15 +25,17 @@ class DBControl:
         db = await aiosqlite.connect(self.db_path)
         cursor_by_account = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
         cursor_by_email = await db.execute(f"SELECT * FROM users WHERE email = ?", (email,))
+
         if await cursor_by_account.fetchone() or await cursor_by_email.fetchone():
             logger.info(f"添加或更新用户{account} 添加成功")
             await db.close()
             return await self.update_user(account, pswd, email, coordinate)
         else:
-            await db.execute(f"INSERT INTO users (id,pswd,email,coordinate,updateTime,signTime,success,total,active) VALUES (?,?,?,?,?,?,?,?)", (account, pswd, email, coordinate, getTime(), 0, 0, 0,1))
+            await db.execute(f"INSERT INTO users (id,pswd,email,coordinate,updateTime,signTime,success,total,active) VALUES (?,?,?,?,?,?,?,?,?)", (account, pswd, email, coordinate, getTime(), 0, 0, 0,1))
             await db.commit()
             await db.close()
             logger.info(f"添加或更新用户{account} 添加成功")
+            return {'code':'ok','msg':'新用户{account} 添加成功'}
     
     async def check_user(self, account):
         """
