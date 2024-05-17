@@ -157,5 +157,8 @@ class WJC:
             logger.error(f"[{msg['code']}] {msg['msg']}\n{msg['info']}")
             return msg
 
-
+    def isLoginSuccess(self) -> bool:
+        if(self.getSignTask()['code'] == 'ok'):
+            return True
+        return False
 
