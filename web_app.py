@@ -1,20 +1,24 @@
-from sanic import Sanic
-from sanic.response import html,json,file
-import os
-from pathlib import Path
-from db_control import DBControl
-from setting import DB_PATH,REMOTE_API_TOKEN,TIME_SET
-from mail_control import user_mail,reg_mail_gen
+from fastapi import FastAPI,Form
+from fastapi.responses import HTMLResponse,JSONResponse,Response
 from datetime import datetime,time,timedelta
+from fastapi.staticfiles import StaticFiles
+from setting import DB_PATH,TIME_SET
+from mail_control import user_mail,reg_mail_gen,email_validate_gen
+from db_control import getDBControl
+import aiofiles
+from pathlib import Path
+import os
+from core import wjcAccountSignTest
+import uvicorn
+from log_setting import logger
+from web_regControl import RegControl
 
 NOW_FILE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-DB = DBControl(DB_PATH)
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="web_app/build/static"), name="static")
 
-# setup_log()
-# app = Sanic("webSubmitter",log_config=S_LOGGING_CONFIG_DEFAULTS)
-app = Sanic("webSubmitter")
-# app.static("/template","D:\\REPOSITORY\\PROJECTS\\Project\\WJC_Sign\\WebSubmitter\\template")
+eDB = RegControl()
 
 async def is_db_locked() -> bool:
     # 获取当前时间
@@ -32,72 +36,70 @@ async def is_db_locked() -> bool:
         return True
     else:
         return False
+
+
+@app.get('/',response_class=HTMLResponse)
+async def index():
+    async with aiofiles.open(Path(NOW_FILE_PATH+"/web_app/build/index.html"),encoding='utf-8') as f:
+        return HTMLResponse(await f.read(),status_code=200)
+
+
+@app.get('/favicon.ico')
+async def get_favicon():
+    async with aiofiles.open(Path(NOW_FILE_PATH+"/web_app/build/favicon.ico"),'rb') as f:
+        return Response(await f.read(),media_type='image/x-icon')
+
+@app.post('/checkAccount')
+async def check_account(account:str=Form(),pswd:str=Form(),email:str=Form()):
+    global eDB
+    if(await is_db_locked()):
+        logger.info(f'用户 {account} 尝试在非开放时间点注册')
+        return JSONResponse({'code':'fail','msg':f'当前时间段 ({TIME_SET["start"]} - {TIME_SET["end"]}) 无法注册，请在非此时间段再重试'})
     
+    await eDB.init_db()
 
-@app.get('/')
-async def index(request):
-    # async with aiofiles.open('/template/submit_index.html', mode='r') as f:
-    #     content = await f.read()
-    #     return html(content)
-    return await file(Path(NOW_FILE_PATH+"/template/submit_index.html"))
+    if(await eDB.check_user(account,pswd) or await wjcAccountSignTest(account,pswd)):
+        emailVCode = await eDB.updata_user(account,pswd,email)
 
-
-@app.get('/customLocalHelp')
-async def customHelp(request):
-    # async with aiofiles.open('/template/custom_readme.html', mode='r') as f:
-    #     content = await f.read()
-    #     return html(content)
-    return await file(Path(NOW_FILE_PATH+"/template/custom_readme.html"))
+        res = user_mail('自动签到注册邮箱验证码',f'您的验证码为：{emailVCode}',email)
+        if(res):
+            return JSONResponse(content={'code':'ok','msg':'账号验证成功'})
+        else:
+            return JSONResponse(content={'code':'fail','msg':'邮箱不存在或格式错误'})
+    else:
+        return JSONResponse(content={'code':'fail','msg':'账号或密码错误'})
 
 
-@app.get('/file/local')
-async def getLocal(request):
-    # async with aiofiles.open('/local.json', mode='r') as f:
-    #     content = await f.read()
-    #     return json(content)
-    return await file(Path(NOW_FILE_PATH+"/local.json"))
+@app.post('/emailCheck')
+async def emailCheck(account:str=Form(),emailVCode:str=Form()):
+    global eDB
+    if(await is_db_locked()):
+        return JSONResponse({'code':'fail','msg':f'当前时间段 ({TIME_SET["start"]} - {TIME_SET["end"]}) 无法注册，请在非此时间段再重试'})
+    
+    await eDB.init_db()
+
+    if await eDB.check_email(account,emailVCode):
+        return JSONResponse(content={'code':'ok','msg':'邮箱验证成功！'})
+    else:
+        return JSONResponse(content={'code':'fail','msg':'验证码错误或已过期！'})
 
 
 @app.post('/submit')
-async def submit(request):
-    if await is_db_locked():
-        #logger.error(f'[WEB]用户{form["username"][0]} - {form["email"][0]}在脚本启动期内被拒绝注册')
-        return json({"code":'fail','msg':f'当前时间段（{TIME_SET["start"]} - {TIME_SET["end"]}）无法注册，请在非此时间段再重试'})
+async def submit(account:str=Form(),coordinate:str=Form()):
+    global eDB
+    if(await is_db_locked()):
+        return JSONResponse({'code':'fail','msg':f'当前时间段 ({TIME_SET["start"]} - {TIME_SET["end"]}) 无法注册，请在非此时间段再重试'})
     
-    form = request.get_form()
-    if user_mail('注册成功',reg_mail_gen({'account':form["username"][0],'email':form["email"][0],'coordinate':form["coordinates"][0]}),form["email"][0]):
-        await DB.add_user(form["username"][0],form["password"][0],form["email"][0],form["coordinates"][0])
-        #logger.info(f'[WEB]用户{form["username"][0]} - {form["email"][0]}注册成功')
-        return json({"code":'ok','msg':'提交成功，请检查你的邮箱！'})
+    await eDB.init_db()
+
+    if await eDB.is_user_pass(account):
+        user_info = await eDB.finish_reg(account)
+        DB = await getDBControl(DB_PATH)
+        await DB.add_user(account,user_info['pswd'],user_info['email'],coordinate)
+        return JSONResponse(content={'code':'ok','msg':'注册成功'})
     else:
-        #logger.error(f'[WEB]用户{form["username"][0]} - {form["email"][0]}注册失败')
-        return json({"code":'fail','msg':'提交失败，请检查你的邮箱地址是否填写正确！'})
+        return JSONResponse(content={'code':'fail','msg':'当前账号未通过验证'})
     
-
-@app.get('/reg_success_page')
-async def reg_success_page(request):
-    return await file(Path(NOW_FILE_PATH+"/template/reg_success_page.html"))
-
-@app.post('/getUsers')
-async def get_users_info(request):
-    if await is_db_locked():
-        return json({"code":'fail','msg':f'当前时间段（{TIME_SET["start"]} - {TIME_SET["end"]}）无法获取用户信息，请在非此时间段再重试'})
-    
-
-    form = request.get_form()
-    if form["token"][0] == REMOTE_API_TOKEN:
-        users = await DB.get_users_info()
-        #logger.info(f'获取用户信息成功')
-        return json({"code":'ok',"msg":'验证成功','data':users})
-    else:
-        #logger.error(f'获取用户信息失败，验证token ->{form["token"][0]}')
-        return json({"code":'fail','msg':'验证失败'})
-
-@app.get('/favicon.ico')
-async def get_favicon(request):
-    return await file(Path(NOW_FILE_PATH+"/template/favicon.ico"))
-
 
 if __name__ == '__main__':
-    app.run('0.0.0.0', port=8888,debug=True,access_log=False)
-    # app.run('::',443,ssl='/home/admin/certificate/')
+    uvicorn.run(app='web_app_new:app',host='0.0.0.0',port=8000,reload=True)
