@@ -103,3 +103,4 @@ async def submit(account:str=Form(),coordinate:str=Form()):
 
 if __name__ == '__main__':
     uvicorn.run(app='web_app_new:app',host='0.0.0.0',port=8000,reload=True)
+    #uvicorn.run(app='web_app_new:app',host='0.0.0.0',port=80,ssl_keyfile='/home/admin/certificate/certkey.key',ssl_certfile='/home/admin/certificate/certfile.cer')
