@@ -1,5 +1,5 @@
 from core import WJC
-from setting import DB_TABLE,REMOTE_API,TIME_SET,TIME_CHCECK_WAIT,DB_PATH,SIGN_MAX_TRY_TIMES,TIME_SLEEP_WAIT
+from setting import TIME_SET,TIME_CHCECK_WAIT,DB_PATH,SIGN_MAX_TRY_TIMES,TIME_SLEEP_WAIT
 from queue import Queue
 from datetime import datetime,time,date
 from db_control import getDBControl
@@ -117,7 +117,6 @@ class AutoSign:
         
     async def time_check(self):
         logger.info('时间检查开始')
-        db = await getDBControl(DB_PATH)
         while True:
             while True:
                 # 获取当前时间
@@ -137,6 +136,7 @@ class AutoSign:
                     await self.sign_task()
                     await self.__fail_user_sign()
                     logger.info('签到结束，开始发送管理员邮件')
+                    db = await getDBControl(DB_PATH)
                     users_info = await db.get_users_info()
                     info = []
                     for user in users_info:
@@ -149,7 +149,6 @@ class AutoSign:
                         })
                     mail_content = mail_control.admin_mail_gen(info)
                     mail_control.admin_mail('签到状态',mail_content)
-                    
                     break
                 else:
                     logger.info(f'未到签到开始时间，等待{TIME_CHCECK_WAIT}秒后重新开始签到')
