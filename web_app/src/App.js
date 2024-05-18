@@ -10,11 +10,12 @@ const { Title } = Typography;
 
 export default function RegisterForm() {
   const [nowSetp,setStep] = useState(0);
-  const [formData,setFromData] = useState({
-    username:'',
-    password:'',
+  const [formData,setFormData] = useState({
+    account:'',
+    pswd:'',
     email:'',
-    coordinates:''
+    coordinates:'',
+    emailVCode:''
   });
 
   return (
@@ -34,23 +35,23 @@ export default function RegisterForm() {
           {title:'完成注册',icon:<SmileOutlined />}
         ]}
       />
-      <PageSwitch nowSetp={nowSetp} setStep={setStep} formData={formData} setFromData={setFromData}/>
+      <PageSwitch nowSetp={nowSetp} setStep={setStep} formData={formData} setFormData={setFormData}/>
     </Flex>
   );
 }
 
-function PageSwitch({nowSetp,setStep,formData,setFromData}){
+function PageSwitch({nowSetp,setStep,formData,setFormData}){
   switch (nowSetp) {
     case 0:
-      return <RegPage setStep={setStep} setFromData={setFromData}/>;
+      return <RegPage setStep={setStep} setFormData={setFormData}/>;
     case 1:
-      return <EmailCheckPage setStep={setStep} formData={formData} setFromData={setFromData}/>;
+      return <EmailCheckPage setStep={setStep} formData={formData} setFormData={setFormData}/>;
     case 2:
-      return <SetCoordinatesPage setStep={setStep} setFromData={setFromData}/>;
+      return <SetCoordinatesPage setStep={setStep} formData={formData} setFormData={setFormData}/>;
     case 3:
       return <ResultPage />;
     default:
-      return <RegPage setStep={setStep} setFromData={setFromData}/>;
+      return <RegPage setStep={setStep} setFormData={setFormData}/>;
   }
 }
 

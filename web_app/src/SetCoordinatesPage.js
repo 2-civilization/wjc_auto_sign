@@ -1,13 +1,11 @@
-import { Form,Typography,Button,Select } from 'antd';
+import { Form,message,Typography,Button,Select } from 'antd';
+import axios from 'axios';
 import { useState } from 'react';
-
-
 const { Title,Text } = Typography;
 
 export default function SetCoordinatesPage(props){
     const coordinatesList = getCoordinatesList();
   
-    //console.log(coordinatesList);
     const selectCoordinates = [];
     for(let key in coordinatesList){
       selectCoordinates[key]={
@@ -24,7 +22,31 @@ export default function SetCoordinatesPage(props){
       setChooseCValue(coordinates);
     }
     function setCoordinates(){
-      props.setStep(3);
+      // props.setFormData({
+      //   coordinates:chooseCValue
+      // })
+      const setStep = props.setStep;
+      const account = props.formData.account;
+      // const coordinates = props.formData.coordinates;
+      axios.post('/submit',{
+        account:account,
+        coordinate:chooseCValue
+      },{
+        headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }).then(res=>{
+        if(res.data.code==='ok'){
+          message.success(res.data.meg);
+          setStep(3);
+        }else{
+          message.error(res.data.meg);
+        }
+      })
+      .catch(error=>{
+        message.error("与服务器连接失败");
+        console.log(error);
+      })
     }
     return (
       <>
