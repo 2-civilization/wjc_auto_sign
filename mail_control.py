@@ -2,7 +2,7 @@ import yagmail
 import yagmail.error
 from setting import MAIL_SET
 from smtplib import SMTPDataError
-from setting import logger
+from log_setting import logger
 
 def admin_mail(subject:str, contents:str) -> None:
     try:
@@ -206,3 +206,19 @@ def ban_mail_gen(account:str):
 </html>
 '''
     return content
+
+def email_validate_gen(code:str):
+    content = '''
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动签到注册验证码</title>
+</head>
+<body>
+<p>你的验证码为：<b>'''+code+'''</b></p>
+<p>验证码有效期为3分钟，请尽快填入！</p>
+</body>
+</html>
+'''
