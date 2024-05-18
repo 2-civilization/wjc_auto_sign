@@ -3,7 +3,7 @@ import asyncio
 from time import time
 from datetime import datetime
 from setting import DB_INIT_SQL,FAIL_MAX_TRY_DAYS
-from setting import logger
+from log_setting import logger
 
 def getTime():
     return str(time()).replace('.','')[:13]
@@ -11,10 +11,8 @@ def getTime():
 class DBControl:
     def __init__(self, db_path):
         self.db_path = db_path
-        asyncio.run(self.__init_db())
-    
 
-    async def __init_db(self):
+    async def init_db(self):
         db = await aiosqlite.connect(self.db_path)
         await db.execute(DB_INIT_SQL)
         await db.commit()
@@ -29,7 +27,7 @@ class DBControl:
             await db.close()
             return await self.update_user(account, pswd, email, coordinate)
         else:
-            await db.execute(f"INSERT INTO users (id,pswd,email,coordinate,updateTime,signTime,success,total,active) VALUES (?,?,?,?,?,?,?,?)", (account, pswd, email, coordinate, getTime(), 0, 0, 0,1))
+            await db.execute(f"INSERT INTO users (id,pswd,email,coordinate,updateTime,signTime,success,total,active) VALUES (?,?,?,?,?,?,?,?,?)", (account, pswd, email, coordinate, getTime(), 0, 0, 0,1))
             await db.commit()
             await db.close()
             logger.info(f"添加或更新用户{account} 添加成功")
@@ -163,6 +161,9 @@ class DBControl:
         await db.commit()
         await db.close()
 
-
+async def getDBControl(db_path):
+    DB = DBControl(db_path)
+    await DB.init_db()
+    return DB
 
 
