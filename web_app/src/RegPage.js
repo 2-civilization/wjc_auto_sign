@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { TinyColor } from '@ctrl/tinycolor';
-import { Form,message,Input,ConfigProvider,Button,Typography } from 'antd';
+import { Form,message,Input,ConfigProvider,Button,Typography,Modal } from 'antd';
 import { FireOutlined } from '@ant-design/icons';
 import axios from 'axios';
-const { Title } = Typography;
+const { Title,Link,Text } = Typography;
 
 export default function RegPage(props) {
     const colors1 = ['#6253E1', '#04BEFE'];
@@ -14,7 +14,8 @@ export default function RegPage(props) {
   
     const [form] = Form.useForm();
     const [nowLoading,setNowLoading] = useState(false);
-    
+    const [isModalOpen,setModalOpen] = useState(false);
+
     async function checkAccount(){
       setNowLoading(true);
       form.validateFields()
@@ -52,11 +53,7 @@ export default function RegPage(props) {
           })
         .catch((err)=>{
           setNowLoading(false);
-        })
-      ;
-      
-        
-       
+        });
     }
   
     return (
@@ -124,6 +121,7 @@ export default function RegPage(props) {
                 },
               }}
             >
+              
               <Button block
                   type="primary"
                   icon={<FireOutlined />}
@@ -135,8 +133,24 @@ export default function RegPage(props) {
             </ConfigProvider>
           </Form.Item>
         </Form>
+        <Link onClick={()=>{setModalOpen(true)}}>这是什么？点我查看说明</Link>
+        <Modal
+          title="使用说明"
+          open={isModalOpen}
+          onOk={() => {setModalOpen(false)}}
+          onCancel={() => {setModalOpen(false)}}
+        >
+          <Typography>
+            <p>这是一个在线的，可为你在每晚自动签到的脚本程序。</p>
+            <p>它绕过了一些不必要的步骤，因此可以帮你更快地完成签到，甚至在他人校芜优打开失败的情况下。</p>
+            <p>你需要填写你的校芜优的账号与密码，以及一个用于接收每晚签到信息的邮箱（很重要）。</p>
+            <p>完成注册后，脚本会自动为你进行签到，你要做的只是关注下你的邮箱，确保签到成功即可。</p>
+          </Typography>
+        </Modal>
       </>
     );
-  }
+}
+
+
 
 
