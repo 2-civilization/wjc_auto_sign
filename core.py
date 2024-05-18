@@ -162,3 +162,7 @@ class WJC:
             return True
         return False
 
+async def wjcAccountSignTest(account:str,pswd:str) -> bool:
+    wjc = WJC(account,pswd)
+    wjc.login()
+    return wjc.isLoginSuccess()
