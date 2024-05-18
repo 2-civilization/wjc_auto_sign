@@ -33,6 +33,7 @@ class DBControl:
             await db.commit()
             await db.close()
             logger.info(f"添加或更新用户{account} 添加成功")
+            return {'code':'ok','msg':'新用户{account} 添加成功'}
     
     async def check_user(self, account):
         """
