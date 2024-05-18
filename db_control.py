@@ -22,10 +22,12 @@ class DBControl:
         db = await aiosqlite.connect(self.db_path)
         cursor_by_account = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
         cursor_by_email = await db.execute(f"SELECT * FROM users WHERE email = ?", (email,))
-        if await cursor_by_account.fetchone() or await cursor_by_email.fetchone():
-            logger.info(f"添加或更新用户{account} 添加成功")
+        account_res = await cursor_by_account.fetchone()
+        email_res = await cursor_by_email.fetchone()
+        if account_res or email_res:
             await db.close()
-            return await self.update_user(account, pswd, email, coordinate)
+            await self.update_user(account, pswd, email, coordinate)
+            logger.info(f"添加或更新用户{account} 添加成功")
         else:
             await db.execute(f"INSERT INTO users (id,pswd,email,coordinate,updateTime,signTime,success,total,active) VALUES (?,?,?,?,?,?,?,?,?)", (account, pswd, email, coordinate, getTime(), 0, 0, 0,1))
             await db.commit()
@@ -52,17 +54,8 @@ class DBControl:
             await db.close()
             return {'code':'fail','msg':'用户不存在','info':None}
     
-    async def __update_user_by_account(self, account, pswd, email, coordinate):
-        db = await aiosqlite.connect(self.db_path)
-        await db.execute(f"UPDATE users SET pswd=?,email=?,coordinate=?,updateTime=?,failDays=0,active=1 WHERE id = ?", (pswd, email, coordinate,getTime(),account))
-        await db.commit()
-        await db.close()
 
-    async def __update_user_by_email(self, account, pswd, email, coordinate):
-        db = await aiosqlite.connect(self.db_path)
-        await db.execute(f"UPDATE users SET id=?,pswd=?,coordinate=?,updateTime=?,failDays=0,active=1 WHERE email=?", (account,pswd,coordinate,getTime(),email))
-        await db.commit()
-        await db.close()
+
 
     async def update_user(self, account, pswd, email, coordinate):
         """
@@ -80,15 +73,18 @@ class DBControl:
         db = await aiosqlite.connect(self.db_path)
         cursor_by_account = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
         cursor_by_email = await db.execute(f"SELECT * FROM users WHERE email = ?", (email,))
-    
-        if await cursor_by_account.fetchone():
-            db.close()
-            await self.__update_user_by_account(account, pswd, email, coordinate)
+        account_res = await cursor_by_account.fetchone()
+        email_res = await cursor_by_email.fetchone()
+        if account_res:
+            await db.execute(f"UPDATE users SET pswd=?,email=?,coordinate=?,updateTime=?,failDays=0,active=1 WHERE id = ?", (pswd, email, coordinate,getTime(),account))
+            await db.commit()
+            await db.close()
             logger.info(f"更新用户{account}信息成功[账号优先 {account}]")
             return {'code':'ok','msg':f"更新用户{account}信息成功[账号优先 {account}]"}
-        elif await cursor_by_email.fetchone():
+        elif email_res:
+            await db.execute(f"UPDATE users SET id=?,pswd=?,coordinate=?,updateTime=?,failDays=0,active=1 WHERE email=?", (account,pswd,coordinate,getTime(),email))
+            await db.commit()
             await db.close()
-            await self.__update_user_by_email(account,pswd,email,coordinate)
             logger.info(f"更新用户{account}信息成功[邮箱优先 {email}]")
             return {'code':'ok','msg':f"更新用户{account}信息成功[邮箱优先 {email}]"}
         else:
