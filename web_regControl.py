@@ -1,16 +1,17 @@
 import aiosqlite
 import random
 from time import time as tTime
+from setting import DB_PATH
 async def emailVCodeGen() -> str:
     return ''.join(str(random.randint(0, 9)) for _ in range(6))
 
 
 class RegControl:
     def __init__(self):
-       pass
+       self.DB_PATH = '/regControl.db'
 
     async def init_db(self):
-        db = await aiosqlite.connect("./regControl.db")
+        db = await aiosqlite.connect(self.DB_PATH)
         await db.execute("""
             CREATE TABLE IF NOT EXISTS regInfo(
                 account TEXT PRIMARY KEY,
@@ -26,14 +27,14 @@ class RegControl:
     
     async def init_user(self,account,pswd,email) -> str:
         emailVCode = await emailVCodeGen()
-        db = await aiosqlite.connect("./regControl.db")
+        db = await aiosqlite.connect(self.DB_PATH)
         await db.execute("INSERT INTO regInfo VALUES (?,?,?,?,?,?)",(account,pswd,email,emailVCode,str(int(tTime()*1000)),0))
         await db.commit()
         await db.close()
         return emailVCode
     
     async def check_user(self,account,pswd) -> bool:
-        db = await aiosqlite.connect("./regControl.db")
+        db = await aiosqlite.connect(self.DB_PATH)
         cursor = await db.execute("SELECT * FROM regInfo WHERE account=? AND pswd=?",(account,pswd))
         result = await cursor.fetchone()
         await db.close()
@@ -43,7 +44,7 @@ class RegControl:
             return True
         
     async def check_email(self,account,emailVCode) -> bool:
-        db = await aiosqlite.connect("./regControl.db")
+        db = await aiosqlite.connect(self.DB_PATH)
         cursor = await db.execute("SELECT * FROM regInfo WHERE account=?",(account,))
         result = await cursor.fetchone()
         if result is None:
@@ -56,7 +57,7 @@ class RegControl:
             return True
         
     async def is_user_pass(self,account) -> bool:
-        db = await aiosqlite.connect("./regControl.db")
+        db = await aiosqlite.connect(self.DB_PATH)
         cursor = await db.execute("SELECT * FROM regInfo WHERE account=?",(account,))
         result = await cursor.fetchone()
         await db.close()
@@ -66,7 +67,7 @@ class RegControl:
             return result[5] == 1
         
     async def updata_user(self,account,pswd,email) -> str:
-        db = await aiosqlite.connect("./regControl.db")
+        db = await aiosqlite.connect(self.DB_PATH)
         cursor = await db.execute("SELECT * FROM regInfo WHERE account=?",(account,))
         res = await cursor.fetchone()
         if res is None:
@@ -80,7 +81,7 @@ class RegControl:
             return emailVCode
     
     async def finish_reg(self,account) -> dict:
-        db = await aiosqlite.connect("./regControl.db")
+        db = await aiosqlite.connect(self.DB_PATH)
         cursor = await db.execute("SELECT * FROM regInfo WHERE account=?",(account,))
         res = await cursor.fetchone()
         if res is None:
