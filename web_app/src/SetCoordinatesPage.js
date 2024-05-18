@@ -37,10 +37,10 @@ export default function SetCoordinatesPage(props){
       }
     }).then(res=>{
         if(res.data.code==='ok'){
-          message.success(res.data.meg);
+          message.success(res.data.msg);
           setStep(3);
         }else{
-          message.error(res.data.meg);
+          message.error(res.data.msg);
         }
       })
       .catch(error=>{
