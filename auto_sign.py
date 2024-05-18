@@ -1,8 +1,8 @@
 from core import WJC
-from setting import DB_TABLE,REMOTE_API,TIME_SET,TIME_CHCECK_WAIT,DB_PATH,SIGN_MAX_TRY_TIMES,TIME_SLEEP_WAIT
+from setting import TIME_SET,TIME_CHCECK_WAIT,DB_PATH,SIGN_MAX_TRY_TIMES,TIME_SLEEP_WAIT
 from queue import Queue
 from datetime import datetime,time,date
-from db_control import DBControl
+from db_control import getDBControl
 import mail_control
 import asyncio
 from log_setting import logger
@@ -11,7 +11,7 @@ class AutoSign:
     def __init__(self):
         self.q_user = Queue()
         self.q_fail_user = Queue()
-        self.db = DBControl(DB_PATH)
+        
 
     async def __error_msg_gen(self,content:str) -> str:
         if '请登录' in content or '需要登录才能进去系统' in content:
@@ -27,13 +27,14 @@ class AutoSign:
         wjc = WJC(account, pswd)
         wjc.login()
         info = wjc.getSignTask()
+        db = await getDBControl(DB_PATH)
         try:
             info = wjc.sign(coordinate,info['info']['aaData'][0]['DM'],info['info']['aaData'][0]['SJDM'])
             if info['code'] == 'ok':
                 logger.info(f"{account} 签到成功")
                 mail_content = mail_control.user_mail_gen(f"签到成功",f"{account} 签到成功",str(info['info']))
                 mail_control.user_mail('签到成功',mail_content,email)
-                await self.db.user_sign(account)
+                await db.user_sign(account)
             else:
                 logger.error(f"{account} 签到失败")
                 self.q_fail_user.put({
@@ -43,7 +44,7 @@ class AutoSign:
                     'email':email,
                     'info':str(info)
                 })
-                await self.db.user_try_add(account)
+                await db.user_try_add(account)
         except KeyError:
             logger.error(f"{account} 签到失败")
             self.q_fail_user.put({
@@ -53,19 +54,20 @@ class AutoSign:
                 'email':email,
                 'info':str(info)
             })
-            await self.db.user_try_add(account)
+            await db.user_try_add(account)
         
         return info 
 
     async def __sign_task_queue(self) -> None:
-        data = await self.db.get_users_info()
+        db = await getDBControl(DB_PATH)
+        data = await db.get_users_info()
         logger.info(f"加载用户 {len(data)} 个")
         for u in data:
             if not u[8]:
                 # active 0 跳过该用户
                 continue
 
-            if (await self.db.check_user(u[0]))['code'] == 'ok':
+            if (await db.check_user(u[0]))['code'] == 'ok':
                 u_info = {
                     'account':u[0],
                     'pswd':u[1],
@@ -85,6 +87,7 @@ class AutoSign:
     
     @logger.catch
     async def __fail_user_sign(self) -> None:
+        db = await getDBControl(DB_PATH)
         logger.info('重试队列开始')
         times_try = 1
         while not self.q_fail_user.empty() and times_try < SIGN_MAX_TRY_TIMES:
@@ -104,10 +107,10 @@ class AutoSign:
             logger.info(f"向用户{user['account']}发送签到失败信息成功")
 
             # 添加失败天数
-            await self.db.user_fail_day_add(user['account'])
+            await db.user_fail_day_add(user['account'])
 
             # 尝试封禁失败用户
-            if await self.db.deactive_user(user['account']):
+            if await db.deactive_user(user['account']):
                 mail_content = mail_control.ban_mail_gen(str(user['account']))
                 mail_control.user_mail('自动签到停止',mail_content,user['email'])
                 logger.info(f"向用户{user['account']}发送账号禁用成功")
@@ -128,25 +131,24 @@ class AutoSign:
                 if TIME_CHCECK_WAIT <1:
                     TIME_CHCECK_WAIT = 1
 
-                #if start_time <= current_time <= end_time:
-                if True:
+                if start_time <= current_time <= end_time:
                     logger.info('签到开始')
                     await self.sign_task()
                     await self.__fail_user_sign()
                     logger.info('签到结束，开始发送管理员邮件')
-                    users_info = await self.db.get_users_info()
+                    db = await getDBControl(DB_PATH)
+                    users_info = await db.get_users_info()
                     info = []
                     for user in users_info:
                         info.append({
                             'account':user[0],
-                            'status':'是' if (await self.db.check_user(user[0]))['code'] == 'ok_signed' else '否',
+                            'status':'是' if (await db.check_user(user[0]))['code'] == 'ok_signed' else '否',
                             'success':user[6],
                             'total':user[7],
                             'active':user[8],
                         })
                     mail_content = mail_control.admin_mail_gen(info)
                     mail_control.admin_mail('签到状态',mail_content)
-                    
                     break
                 else:
                     logger.info(f'未到签到开始时间，等待{TIME_CHCECK_WAIT}秒后重新开始签到')

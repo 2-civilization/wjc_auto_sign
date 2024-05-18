@@ -10,6 +10,7 @@ shellescape==3.8.1
 urllib3==2.2.1
 yagmail==0.15.293
 aiosqlite==0.20.0
-sanic==23.12.1
 aiofiles==23.2.1  
 loguru==0.7.2
+uvicorn==0.29.0
+fastapi==0.111.0
