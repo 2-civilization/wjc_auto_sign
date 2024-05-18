@@ -3,7 +3,7 @@ import { TinyColor } from '@ctrl/tinycolor';
 import { Form,message,Input,ConfigProvider,Button,Typography,Modal } from 'antd';
 import { FireOutlined } from '@ant-design/icons';
 import axios from 'axios';
-const { Title,Link,Text } = Typography;
+const { Title,Link } = Typography;
 
 export default function RegPage(props) {
     const colors1 = ['#6253E1', '#04BEFE'];
