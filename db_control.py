@@ -87,12 +87,12 @@ class DBControl:
             logger.info(f"更新用户{account}信息成功[账号优先 {account}]")
             return {'code':'ok','msg':f"更新用户{account}信息成功[账号优先 {account}]"}
         elif await cursor_by_email.fetchone():
-            db.close()
+            await db.close()
             await self.__update_user_by_email(account,pswd,email,coordinate)
             logger.info(f"更新用户{account}信息成功[邮箱优先 {email}]")
             return {'code':'ok','msg':f"更新用户{account}信息成功[邮箱优先 {email}]"}
         else:
-            db.close()
+            await db.close()
             logger.info(f"更新用户{account}信息失败[账号或邮箱不存在 {email}]")
             return {'code':'fail','msg':f"更新用户{account}信息失败[账号或邮箱不存在 {email}]"}
 
