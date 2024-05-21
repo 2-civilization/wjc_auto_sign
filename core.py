@@ -4,6 +4,7 @@ from lxml import etree
 from time import time as getTime
 from requests.packages import urllib3
 from log_setting import logger
+from requests.exceptions import ConnectTimeout,Timeout
 
 urllib3.disable_warnings()
 
@@ -41,7 +42,12 @@ class WJC:
         pass
 
     def __loginInfoGet(self):
-        res = self.s.get('https://ids.uwh.edu.cn/authserver/login?service=https://ehall.uwh.edu.cn/login', headers=self.headers)
+        try:
+            res = self.s.get('https://ids.uwh.edu.cn/authserver/login?service=https://ehall.uwh.edu.cn/login', headers=self.headers,timeout=45)
+        except ConnectTimeout or Timeout:
+            logger.error('请求登录信息超时')
+            return {'code':'fail','msg':'请求登录息超时'}
+        
         if res.status_code == 200:
             html = etree.HTML(res.text)
             try:
@@ -92,8 +98,13 @@ class WJC:
             'Accept-Encoding':'gzip, deflate',
             'Accept-Language':'zh-CN,zh;q=0.9',
         }
-        res = self.s.post('https://ids.uwh.edu.cn/authserver/login?service=https://ehall.uwh.edu.cn/login',headers=headers,data=data_form,verify=False)
-        res_cas = self.s.post('https://ehall.uwh.edu.cn/student/cas')
+        try:
+            res = self.s.post('https://ids.uwh.edu.cn/authserver/login?service=https://ehall.uwh.edu.cn/login',headers=headers,data=data_form,verify=False,timeout=45)
+            res_cas = self.s.post('https://ehall.uwh.edu.cn/student/cas',timeout=45)
+        except ConnectTimeout or Timeout:
+            logger.error('请求登录超时')
+            return {'code':'fail','msg':'请求登录超时'}
+        
         cookie = ''
         for k,v in self.s.cookies.get_dict().items():
             cookie += k+'='+v+';'
@@ -113,8 +124,12 @@ class WJC:
             "sSortDir_0": "desc",
             "_t_s_": self.__timeGen()
         }
-
-        res = self.s.get(api, params=params_load)
+        try:
+            res = self.s.get(api, params=params_load,timeout=45)
+        except ConnectTimeout or Timeout:
+            logger.error('请求签到信息超时')
+            return {'code':'fail','msg':'请求签到息超时'}
+        
         if res.status_code == 200:
             try:
                 msg = {'code': 'ok', 'msg': '成功获取签到任务', 'info': res.json()}
@@ -147,7 +162,11 @@ class WJC:
             "operationType": "Update"
         }
 
-        res = self.s.post(api,params=params_load, data=data_form,headers=self.headers)
+        try:
+            res = self.s.post(api,params=params_load, data=data_form,headers=self.headers,timeout=45)
+        except ConnectTimeout or Timeout:
+            logger.error('请求签到超时')
+            return {'code':'fail','msg':'请求签到超时'}
         if res.status_code == 200:
             msg = {'code': 'ok', 'msg': '成功签到', 'info': res.json()}
             logger.info(f"[{msg['code']}] {msg['msg']}")
