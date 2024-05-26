@@ -23,12 +23,12 @@ class AutoSign:
         return '未知错误'
 
     @logger.catch
-    async def sign(self,account, pswd,coordinate,email) -> bool:
+    async def sign(self,account, pswd,coordinate,email,fail_try:bool=False):
         wjc = WJC(account, pswd)
-        wjc.login()
-        info = wjc.getSignTask()
         db = await getDBControl(DB_PATH)
         try:
+            wjc.login()
+            info = wjc.getSignTask()
             info = wjc.sign(coordinate,info['info']['aaData'][0]['DM'],info['info']['aaData'][0]['SJDM'])
             if info['code'] == 'ok':
                 logger.info(f"{account} 签到成功")
@@ -45,15 +45,16 @@ class AutoSign:
                     'info':str(info)
                 })
                 await db.user_try_add(account)
-        except KeyError:
+        except Exception:
             logger.error(f"{account} 签到失败")
-            self.q_fail_user.put({
-                'account':account,
-                'pswd':pswd,
-                'coordinate':coordinate,
-                'email':email,
-                'info':str(info)
-            })
+            if not fail_try:
+                self.q_fail_user.put({
+                    'account':account,
+                    'pswd':pswd,
+                    'coordinate':coordinate,
+                    'email':email,
+                    'info':str(info)
+                })
             await db.user_try_add(account)
         
         return info 
@@ -94,7 +95,7 @@ class AutoSign:
             logger.info(f"第 {times_try} 次重试开始")
             user = self.q_fail_user.get()
             self.q_fail_user.task_done()
-            await self.sign(user['account'],user['pswd'],user['coordinate'],user['email'])
+            await self.sign(user['account'],user['pswd'],user['coordinate'],user['email'],fail_try=True)
             logger.info(f"第 {times_try} 次重试结束")
             times_try +=1
         
