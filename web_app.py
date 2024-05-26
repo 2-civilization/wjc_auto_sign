@@ -96,6 +96,7 @@ async def submit(account:str=Form(),coordinate:str=Form()):
         user_info = await eDB.finish_reg(account)
         DB = await getDBControl(DB_PATH)
         await DB.add_user(account,user_info['pswd'],user_info['email'],coordinate)
+        user_mail('自动签到注册成功',reg_mail_gen({'account':account,'email':user_info['email'],'coordinate':coordinate}),user_info['email'])
         return JSONResponse(content={'code':'ok','msg':'注册成功'})
     else:
         return JSONResponse(content={'code':'fail','msg':'当前账号未通过验证'})
