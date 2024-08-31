@@ -1,8 +1,39 @@
 import yagmail
 import yagmail.error
-from setting import MAIL_SET
+from setting import MAIL_SET,CURRENT_PATH
 from smtplib import SMTPDataError
 from log_setting import logger
+from queue import Queue
+from time import sleep
+from threading import Thread
+import asyncio
+import re
+
+def html_get(target:str,info_list:list) -> str:
+    def get_content():
+        path = {
+            'notice':CURRENT_PATH+'temp_doc/notice.html',
+        }
+        with open(path[target],'r',encoding='utf-8') as f:
+            return f.read()
+    
+
+
+    # 使用正则表达式查找所有"WAIT_TO_REPLACE"位置
+    origin_content = get_content(target)
+    pattern = re.compile(r"WAIT_TO_REPLACE")
+    matches = list(pattern.finditer(origin_content))
+
+    # 替换每个"WAIT_TO_REPLACE"位置的内容
+    replaced_str = ""
+    last_index = 0
+    for i, match in enumerate(matches):
+        replaced_str += origin_content[last_index:match.start()] + info_list[i]
+        last_index = match.end()
+    replaced_str += origin_content[last_index:]
+
+    print(replaced_str)
+
 
 def admin_mail(subject:str, contents:str) -> None:
     try:
@@ -59,7 +90,12 @@ def user_mail_gen(title:str,info:str,code:str):
 </body>
 </html>
     '''
+    #return html_get(target='notice',info_list=[title,info,code])
     return content
+
+
+
+
 
 def admin_mail_gen(info_list:list):
     def __active_str_gen(active:int)->str:
@@ -222,3 +258,48 @@ def email_validate_gen(code:str):
 </body>
 </html>
 '''
+    return content
+
+async def new_user_mail(subject:str,contents:str,user:str):
+    user_mail(subject,contents,user)
+    await asyncio.sleep(2)
+
+class MailQueue:
+    def __init__(self,queue_wait_time:int=30):
+        self.queue_wait_time = queue_wait_time
+        self.mail_queue = Queue()
+        self.mail_thread_flag = True
+        self.mail_thread = None
+
+    def add(self,subject:str,contents:str,user:str) -> None:
+        self.mail_queue.put({
+            'subject':subject,
+            'contents':contents,
+            'user':user,
+            'try':0
+        })
+    
+    def post(self) -> str:
+        # while not self.mail_queue.empty() or not self.mail_thread_flag:
+        while not self.mail_queue.empty():
+            mail = self.mail_queue.get()
+            logger.info(f'发送邮件至{mail["user"]}，第{mail["try"]+1}次尝试')
+            res = user_mail(mail['subject'],mail['contents'],mail['user'])
+            self.mail_queue.task_done()
+            if not res and mail['try']<3:
+                # 将会额外尝试发送3次
+                mail.update({'try':mail['try']+1})
+                self.mail_queue.put(mail)
+            sleep(self.queue_wait_time)
+
+        logger.info('邮件队列结束')
+    def start(self) -> None:
+        logger.info('邮件队列已启动')
+        self.mail_thread = Thread(target=self.post)
+        self.mail_thread.start()
+
+    def stop(self) -> None:
+        # 暂时弃用
+        logger.info('邮件队列准备结束')
+        self.mail_thread_flag = False
+        
