@@ -69,7 +69,16 @@ async def check_account(account:str=Form(),pswd:str=Form(),email:str=Form()):
     else:
         return JSONResponse(content={'code':'fail','msg':'账号或密码错误'})
 
-
+@app.post('/stopAccount')
+async def cancel_reg(account:str=Form(),pswd:str=Form()):
+    DB = await getDBControl(DB_PATH)
+    if(await DB.is_user_exist(account,pswd) and await wjcAccountSignTest(account,pswd)):
+        if await DB.deactive_user(account=account,ban_by_user=True):
+            return JSONResponse(content={'code':'ok','msg':'取消注册成功'})
+        else:
+            return JSONResponse(content={'code':'fail','msg':'取消注册失败'})
+    else:
+        return JSONResponse(content={'code':'fail','msg':'未注册自动签到或账号密码错误'})
 @app.post('/emailCheck')
 async def emailCheck(account:str=Form(),emailVCode:str=Form()):
     global eDB
@@ -96,6 +105,7 @@ async def submit(account:str=Form(),coordinate:str=Form()):
         user_info = await eDB.finish_reg(account)
         DB = await getDBControl(DB_PATH)
         await DB.add_user(account,user_info['pswd'],user_info['email'],coordinate)
+        user_mail('自动签到注册成功',reg_mail_gen({'account':account,'email':user_info['email'],'coordinate':coordinate}),user_info['email'])
         return JSONResponse(content={'code':'ok','msg':'注册成功'})
     else:
         return JSONResponse(content={'code':'fail','msg':'当前账号未通过验证'})

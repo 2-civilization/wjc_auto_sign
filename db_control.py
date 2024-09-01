@@ -56,6 +56,19 @@ class DBControl:
             return {'code':'fail','msg':'用户不存在','info':None}
     
 
+    async def is_user_exist(self,account:str) -> bool:
+        """
+        检查用户是否存在
+
+        """
+        db = await aiosqlite.connect(self.db_path)
+        cursor = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
+        user_info = await cursor.fetchone()
+        await db.close()
+        if user_info:
+            return True
+        else:
+            return False
 
 
     async def update_user(self, account, pswd, email, coordinate):
@@ -121,9 +134,9 @@ class DBControl:
         await db.close()
         return users_info
     
-    async def deactive_user(self,account) -> bool:
+    async def deactive_user(self,account:str,ban_by_user:bool=False) -> bool:
         '''
-        申请对签到失败的用户，将其停用
+        申请对签到失败或主动选择停用的用户，将其停用
 
         会自动判断是否符合禁用条件并做出相应的处理。
         :param account: 用户账号
@@ -132,10 +145,10 @@ class DBControl:
         db = await aiosqlite.connect(self.db_path)
         cursor = await db.execute(f"SELECT * FROM users WHERE id = ?", (account,))
         user_info = await cursor.fetchone()
-        if user_info[9]>=FAIL_MAX_TRY_DAYS:
+        if user_info[9]>=FAIL_MAX_TRY_DAYS or ban_by_user:
             await db.execute(f"UPDATE users SET active=? WHERE id = ?", (0,account))
             await db.commit()
-            logger.info(f"由于连续签到失败，用户{account}被禁用")
+            logger.info(f"用户{account}被禁用")
             await db.close()
             return True
         else:
