@@ -164,6 +164,10 @@ export default function RegPage(props) {
           </Form.Item>
         </Form>
         <Link onClick={()=>{setModalOpen(true)}}>这是什么？点我查看说明</Link>
+        <p>
+            <a href='https://gitee.com/saucer216/wjc_auto_sign'><img src='https://gitee.com/saucer216/wjc_auto_sign/widgets/widget_5.svg?color=red' alt='Fork me on Gitee'></img></a>
+            <a href='https://github.com/sz134055/wjc_auto_sign'><img src='https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png' width='50px' height='50px' alt='Fork me on GitHub'></img></a>
+        </p>
         <Modal
           title="使用说明"
           open={isModalOpen}
@@ -173,7 +177,7 @@ export default function RegPage(props) {
           <Typography>
             <p>这是一个在线的，可为你在每晚自动签到的脚本程序。</p>
             <p>它绕过了一些不必要的步骤，因此可以帮你更快地完成签到，甚至在他人校芜优打开失败的情况下。</p>
-            <p>你需要填写你的校芜优的账号与密码，以及一个用于接收每晚签到信息的邮箱（很重要）。</p>
+            <p>你需要填写你的校芜优的账号与密码，以及一个用于接收签到信息的邮箱（很重要），程序会在签到失败的情况下向你发送邮件提醒。</p>
             <p>完成注册后，脚本会自动为你进行签到，你要做的只是关注下你的邮箱，确保签到成功即可。</p>
           </Typography>
         </Modal>
