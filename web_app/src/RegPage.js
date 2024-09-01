@@ -66,6 +66,7 @@ export default function RegPage(props) {
               .then((res)=>{
                 if(res.data.code === 'ok'){
                   message.success(res.data.msg);
+                  setStep(20);
                 }else{
                   message.error(res.data.msg);
                 }

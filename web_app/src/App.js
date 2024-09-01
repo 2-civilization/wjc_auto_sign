@@ -5,6 +5,7 @@ import RegPage from './RegPage';
 import EmailCheckPage from './EmailCheckPage';
 import SetCoordinatesPage from './SetCoordinatesPage';
 import ResultPage from './ResultPage';
+import CancelResultPage from './CancelResultPage'
 
 const { Title } = Typography;
 
@@ -50,6 +51,8 @@ function PageSwitch({nowSetp,setStep,formData,setFormData}){
       return <SetCoordinatesPage setStep={setStep} formData={formData} setFormData={setFormData}/>;
     case 3:
       return <ResultPage />;
+    case 20:
+      return <CancelResultPage />;
     default:
       return <RegPage setStep={setStep} setFormData={setFormData}/>;
   }

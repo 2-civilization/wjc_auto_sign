@@ -72,7 +72,7 @@ async def check_account(account:str=Form(),pswd:str=Form(),email:str=Form()):
 @app.post('/stopAccount')
 async def cancel_reg(account:str=Form(),pswd:str=Form()):
     DB = await getDBControl(DB_PATH)
-    if(await DB.is_user_exist(account,pswd) and await wjcAccountSignTest(account,pswd)):
+    if(await DB.is_user_exist(account) and await wjcAccountSignTest(account,pswd)):
         if await DB.deactive_user(account=account,ban_by_user=True):
             return JSONResponse(content={'code':'ok','msg':'取消注册成功'})
         else:
