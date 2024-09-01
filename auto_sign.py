@@ -11,7 +11,6 @@ class AutoSign:
     def __init__(self):
         self.q_user = Queue()
         self.q_fail_user = Queue()
-        
 
     async def __error_msg_gen(self,content:str) -> str:
         if '请登录' in content or '需要登录才能进去系统' in content:
@@ -32,8 +31,10 @@ class AutoSign:
             info = wjc.sign(coordinate,info['info']['aaData'][0]['DM'],info['info']['aaData'][0]['SJDM'])
             if info['code'] == 'ok':
                 logger.info(f"{account} 签到成功")
-                mail_content = mail_control.user_mail_gen(f"签到成功",f"{account} 签到成功",str(info['info']))
-                mail_control.user_mail('签到成功',mail_content,email)
+                #mail_content = mail_control.user_mail_gen(f"签到成功",f"{account} 签到成功",str(info['info']))
+                # mail_control.user_mail('签到成功',mail_content,email)
+                #await mail_control.new_user_mail('签到成功',mail_content,email)
+
                 await db.user_sign(account)
             else:
                 logger.error(f"{account} 签到失败")
@@ -104,6 +105,8 @@ class AutoSign:
             user = self.q_fail_user.get()
             mail_content = mail_control.user_mail_gen('签到失败','请检查账号密码等信息是否正确',await self.__error_msg_gen(user['info']))
             mail_control.user_mail('签到失败',mail_content,user['email'])
+            #await mail_control.new_user_mail('签到失败',mail_content,user['email'])
+
             self.q_fail_user.task_done()
             logger.info(f"向用户{user['account']}发送签到失败信息成功")
 
@@ -114,6 +117,8 @@ class AutoSign:
             if await db.deactive_user(user['account']):
                 mail_content = mail_control.ban_mail_gen(str(user['account']))
                 mail_control.user_mail('自动签到停止',mail_content,user['email'])
+                # await mail_control.new_user_mail('自动签到停止',mail_content,user['email'])
+                
                 logger.info(f"向用户{user['account']}发送账号禁用成功")
         
     async def time_check(self):
