@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { TinyColor } from '@ctrl/tinycolor';
-import { Form,message,Input,ConfigProvider,Button,Typography,Modal } from 'antd';
+import { Form,message,Input,ConfigProvider,Button,Typography,Modal,Checkbox } from 'antd';
 import { FireOutlined } from '@ant-design/icons';
 import axios from 'axios';
 const { Title,Link } = Typography;
@@ -15,6 +15,7 @@ export default function RegPage(props) {
     const [form] = Form.useForm();
     const [nowLoading,setNowLoading] = useState(false);
     const [isModalOpen,setModalOpen] = useState(false);
+    const [cancelTask,setCancelTask] = useState(false);
 
     async function checkAccount(){
       setNowLoading(true);
@@ -22,35 +23,60 @@ export default function RegPage(props) {
         .then((val)=>{
           const setStep = props.setStep;
           const setFormData = props.setFormData;
-          axios.post('/checkAccount',
-            {
-              account:val.account,
-              pswd:val.pswd,
-              email:val.email
-            },{
-              headers: {
-                  'Content-Type': 'multipart/form-data'
+          if(!cancelTask){
+            axios.post('/checkAccount',
+              {
+                account:val.account,
+                pswd:val.pswd,
+                email:val.email
+              },{
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                  }
+              })
+              .then((res)=>{
+                if(res.data.code === 'ok'){
+                  message.success(res.data.msg);
+                  setFormData({
+                    account:val.account,
+                    pswd:val.pswd,
+                    email:val.email
+                  });
+                  setStep(1);
+                }else{
+                  message.error(res.data.msg);
                 }
-            })
-            .then((res)=>{
-              if(res.data.code === 'ok'){
-                message.success(res.data.msg);
-                setFormData({
-                  account:val.account,
-                  pswd:val.pswd,
-                  email:val.email
-                });
-                setStep(1);
-              }else{
-                message.error(res.data.msg);
-              }
-              setNowLoading(false);
-            }).catch((error)=>{
-              setNowLoading(false);
-              message.error("与服务器连接失败");
-              console.log(error);
-            })
-          })
+                setNowLoading(false);
+              }).catch((error)=>{
+                setNowLoading(false);
+                message.error("与服务器连接失败");
+                console.log(error);
+              })
+          }else{
+            axios.post('/stopAccount',
+              {
+                account:val.account,
+                pswd:val.pswd
+              },
+              {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                  }
+              })
+              .then((res)=>{
+                if(res.data.code === 'ok'){
+                  message.success(res.data.msg);
+                }else{
+                  message.error(res.data.msg);
+                }
+                setNowLoading(false);
+              }).catch((error)=>{
+                setNowLoading(false);
+                message.error("与服务器连接失败");
+                console.log(error);
+              })
+          }
+        })
         .catch((err)=>{
           setNowLoading(false);
         });
@@ -97,7 +123,7 @@ export default function RegPage(props) {
             name='email'
             rules={[
               {
-                required: true,
+                required: !cancelTask,
                 message: '请输入邮箱，用于通知签到'
               },
               {
@@ -106,7 +132,10 @@ export default function RegPage(props) {
               }
             ]}
           >
-            <Input placeholder='推荐使用QQ邮箱'/>
+            <Input placeholder='推荐使用QQ邮箱' disabled={cancelTask}/>
+          </Form.Item>
+          <Form.Item>
+            <Checkbox onChange={()=>{setCancelTask(!cancelTask);}}>取消自动签到请勾选！</Checkbox>
           </Form.Item>
           <Form.Item>
             <ConfigProvider
